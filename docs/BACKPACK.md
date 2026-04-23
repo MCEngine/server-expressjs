@@ -58,6 +58,40 @@ Response example:
 
 </details>
 
+<details>
+<summary><strong>bulk_logs</strong> — log multiple actions at once</summary>
+
+**Endpoint:** `POST /api/backpack/logs`
+
+```json
+{
+  "token": "YOUR_API_TOKEN",
+  "logs": [
+    {
+      "backpack_uuid": "uuid-1",
+      "player_uuid": "player-1",
+      "action": "get"
+    },
+    {
+      "backpack_uuid": "uuid-2",
+      "player_uuid": "player-1",
+      "action": "save"
+    }
+  ]
+}
+```
+
+Response example:
+
+```json
+{
+  "message": "Successfully logged 2 entries",
+  "count": 2
+}
+```
+
+</details>
+
 ## Notes
 
 - `uuid`: The unique identifier for the backpack itself.

@@ -78,4 +78,33 @@ router.post("/backpack", async (req, res) => {
   }
 });
 
+/**
+ * Bulk Backpack Logging
+ * POST /api/backpack/logs
+ * Request Body: { token: string, logs: Array<{ backpack_uuid, player_uuid, action, created_at? }> }
+ */
+router.post("/backpack/logs", async (req, res) => {
+  const { logs } = req.body;
+
+  if (!logs || !Array.isArray(logs)) {
+    return res.status(400).json({ error: "logs array is required" });
+  }
+
+  try {
+    // Sequelize bulkCreate for efficient database insertion
+    const createdLogs = await BackpackLog.bulkCreate(logs, {
+      validate: true,
+      returning: false // Setting to false for performance
+    });
+
+    return res.json({
+      message: `Successfully logged ${createdLogs.length} entries`,
+      count: createdLogs.length
+    });
+  } catch (error) {
+    console.error("Backpack Bulk Log Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
