@@ -1,0 +1,22 @@
+{
+  "name": "Express.js Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [3000],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "christian-kohler.npm-intellisense"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install express dotenv bcrypt crypto-js && npm install --save-dev nodemon",
+  "remoteUser": "node"
+}
