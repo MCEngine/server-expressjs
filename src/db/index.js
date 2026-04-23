@@ -1,4 +1,5 @@
 const { Sequelize } = require("sequelize");
+const path = require("path");
 
 // ==========================================
 // Database Setup
@@ -23,7 +24,7 @@ if (dialect === "mysql") {
   // SQLite connection
   sequelize = new Sequelize({
     dialect: "sqlite",
-    storage: process.env.DB_STORAGE || "./database.sqlite",
+    storage: process.env.DB_STORAGE || path.join(__dirname, "../../database.sqlite"),
     logging: false,
   });
 }
