@@ -49,7 +49,7 @@ Response example:
   "action": "membership_set",
   "account_type": "player",
   "account_uuid": "player-123",
-  "tier": "premium",
+  "tier": "gold",
   "days": 30
 }
 ```
@@ -61,7 +61,7 @@ Response example:
   "message": "Membership updated",
   "account_type": "player",
   "account_uuid": "player-123",
-  "tier": "premium",
+  "tier": "gold",
   "expires": "2026-05-23T12:34:56.789Z"
 }
 ```
