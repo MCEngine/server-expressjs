@@ -2,6 +2,11 @@ require("dotenv").config();
 const express = require("express");
 require("./db");
 
+// Handle BigInt serialization for JSON
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 const app = express();
 app.use(express.json());
 
@@ -14,11 +19,10 @@ const verifyToken = (req, res, next) => {
   next();
 };
 
-// Apply middleware to all /api routes
 app.use("/api", verifyToken);
 
 // Routes
-app.use("/api", require("./routes/rank"));
+app.use("/api", require("./routes/membership"));
 app.use("/api", require("./routes/economy"));
 
 const PORT = process.env.PORT || 3000;

@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../db");
 
-const RankPlayer = sequelize.define(
-  "rank_players",
+const MembershipPlayer = sequelize.define(
+  "membership_players",
   {
     account_type: {
       type: DataTypes.STRING(100),
@@ -14,9 +14,9 @@ const RankPlayer = sequelize.define(
       primaryKey: true,
       allowNull: false,
     },
-    rank: {
-      type: DataTypes.ENUM("member", "copper", "silver", "gold"),
-      defaultValue: "member",
+    tier: {
+      type: DataTypes.ENUM("standard", "copper", "silver", "gold"),
+      defaultValue: "standard",
       allowNull: false,
     },
     last_day: {
@@ -25,9 +25,9 @@ const RankPlayer = sequelize.define(
     },
   },
   {
-    tableName: "rank_players",
+    tableName: "membership_players",
     timestamps: false,
   }
 );
 
-module.exports = RankPlayer;
+module.exports = MembershipPlayer;
