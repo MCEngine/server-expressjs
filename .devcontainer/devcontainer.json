@@ -3,7 +3,13 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "forwardPorts": [3000],
+  "forwardPorts": [3000, 4040],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    }
+  },
   "customizations": {
     "vscode": {
       "settings": {
@@ -13,10 +19,11 @@
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "christian-kohler.npm-intellisense"
+        "christian-kohler.npm-intellisense",
+        "ms-azuretools.vscode-docker"
       ]
     }
   },
-  "postCreateCommand": "npm install express dotenv bcrypt crypto-js && npm install --save-dev nodemon",
+  "postCreateCommand": "npm install",
   "remoteUser": "node"
 }
