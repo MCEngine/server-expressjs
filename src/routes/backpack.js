@@ -1,0 +1,72 @@
+const express = require("express");
+const router = express.Router();
+const BackpackStorage = require("../models/BackpackStorage");
+
+/**
+ * Backpack Storage API
+ * Handles saving and retrieving backpack contents
+ */
+
+// POST /api/backpack
+// Request Body: { action: "get" | "save", uuid: string, contents?: string }
+router.post("/backpack", async (req, res) => {
+  const { action, uuid, contents } = req.body;
+
+  if (!uuid) {
+    return res.status(400).json({ error: "uuid is required" });
+  }
+
+  try {
+    // ACTION: GET
+    if (action === "get") {
+      const backpack = await BackpackStorage.findByPk(uuid);
+      
+      if (!backpack) {
+        return res.json({ 
+          uuid, 
+          contents: null,
+          message: "No backpack found for this UUID" 
+        });
+      }
+
+      return res.json({
+        uuid: backpack.uuid,
+        contents: backpack.contents,
+        updated_at: backpack.updated_at
+      });
+    }
+
+    // ACTION: SAVE
+    if (action === "save") {
+      if (contents === undefined) {
+        return res.status(400).json({ error: "contents is required for save action" });
+      }
+
+      // Find or create the backpack record
+      const [backpack, created] = await BackpackStorage.findOrCreate({
+        where: { uuid },
+        defaults: { contents }
+      });
+
+      if (!created) {
+        // Update existing record
+        backpack.contents = contents;
+        backpack.updated_at = new Date();
+        await backpack.save();
+      }
+
+      return res.json({
+        message: created ? "Backpack created" : "Backpack updated",
+        uuid: backpack.uuid
+      });
+    }
+
+    return res.status(400).json({ error: "Invalid action. Use 'get' or 'save'." });
+
+  } catch (error) {
+    console.error("Backpack API Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+module.exports = router;
