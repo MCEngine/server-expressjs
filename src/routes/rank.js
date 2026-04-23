@@ -2,20 +2,14 @@ const express = require("express");
 const router = express.Router();
 const RankPlayer = require("../models/RankPlayer");
 
-// Token verification middleware
-function verifyToken(req, res, next) {
-  const token = req.body.token;
-  if (token !== process.env.API_TOKEN) {
-    return res.status(401).json({ error: "Unauthorized: Invalid Token" });
-  }
-  next();
-}
-
 // Function to check rank
-async function checkRank(uuid) {
+async function checkRank(type, uuid) {
   if (!uuid) return "member";
   try {
-    const player = await RankPlayer.findByPk(uuid);
+    const player = await RankPlayer.findOne({
+      where: { account_type: type, account_uuid: uuid }
+    });
+
     if (!player) return "member";
 
     if (player.last_day && new Date() > player.last_day) {
@@ -31,40 +25,45 @@ async function checkRank(uuid) {
   }
 }
 
-// Main API Endpoint
-router.post("/rank", verifyToken, async (req, res) => {
-  const { action, uuid, rank, days } = req.body;
+router.post("/rank", async (req, res) => {
+  const { action, account_type, account_uuid, rank, days } = req.body;
+  const type = account_type || "player";
+  const uuid = account_uuid;
+
+  if (!uuid) return res.status(400).json({ error: "account_uuid is required" });
 
   try {
     // ACTION: CHECK RANK
     if (action === "rank_check") {
-      const currentRank = await checkRank(uuid);
-      return res.json({ rank: currentRank });
+      const currentRank = await checkRank(type, uuid);
+      return res.json({ 
+        account_type: type,
+        account_uuid: uuid,
+        rank: currentRank 
+      });
     }
 
-    // ACTION: SET/UPDATE RANK (Added this part)
+    // ACTION: SET/UPDATE RANK
     if (action === "rank_set") {
-      if (!uuid || !rank) {
-        return res.status(400).json({ error: "UUID and Rank are required" });
-      }
+      if (!rank) return res.status(400).json({ error: "Rank is required" });
 
-      // Calculate expiry date if 'days' is provided
       let expiryDate = null;
       if (days) {
         expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + parseInt(days));
       }
 
-      // Upsert: Update if exists, Create if not
-      const [player, created] = await RankPlayer.upsert({
-        uuid: uuid,
+      await RankPlayer.upsert({
+        account_type: type,
+        account_uuid: uuid,
         rank: rank,
         last_day: expiryDate
       });
 
       return res.json({ 
-        message: created ? "Record created" : "Record updated",
-        uuid: uuid,
+        message: "Rank updated",
+        account_type: type,
+        account_uuid: uuid,
         rank: rank,
         expires: expiryDate
       });
@@ -72,7 +71,7 @@ router.post("/rank", verifyToken, async (req, res) => {
 
     return res.status(400).json({ error: "Invalid action provided" });
   } catch (error) {
-    console.error("API Error:", error);
+    console.error("Rank API Error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });

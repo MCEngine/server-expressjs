@@ -1,11 +1,15 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../db");
 
-// Define the rank_players table schema
 const RankPlayer = sequelize.define(
   "rank_players",
   {
-    uuid: {
+    account_type: {
+      type: DataTypes.STRING(100),
+      primaryKey: true,
+      allowNull: false,
+    },
+    account_uuid: {
       type: DataTypes.STRING(36),
       primaryKey: true,
       allowNull: false,
@@ -22,8 +26,8 @@ const RankPlayer = sequelize.define(
   },
   {
     tableName: "rank_players",
-    timestamps: false, // We don't need createdAt/updatedAt for this specific schema
-  },
+    timestamps: false,
+  }
 );
 
 module.exports = RankPlayer;
