@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../db");
 
-const MembershipPlayer = sequelize.define(
-  "membership_players",
+const MembershipAccount = sequelize.define(
+  "membership_accounts",
   {
     account_type: {
       type: DataTypes.STRING(100),
@@ -25,9 +25,9 @@ const MembershipPlayer = sequelize.define(
     },
   },
   {
-    tableName: "membership_players",
+    tableName: "membership_accounts",
     timestamps: false,
   }
 );
 
-module.exports = MembershipPlayer;
+module.exports = MembershipAccount;

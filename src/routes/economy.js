@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const EconomyPlayer = require("../models/EconomyPlayer");
+const EconomyAccount = require("../models/EconomyAccount");
 
 // Token verification middleware (Applied via server.js for all /api routes)
 
 // Helper: Get or Create Account
 async function getAccount(type, uuid) {
-  const [account] = await EconomyPlayer.findOrCreate({
+  const [account] = await EconomyAccount.findOrCreate({
     where: { account_type: type, account_uuid: uuid },
     defaults: { coin: 0, copper: 0, silver: 0, gold: 0 }
   });
