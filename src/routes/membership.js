@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const MembershipPlayer = require("../models/MembershipPlayer");
+const MembershipAccount = require("../models/MembershipAccount");
 
 async function checkMembership(type, uuid) {
   if (!uuid) return "standard";
   try {
-    const player = await MembershipPlayer.findOne({
+    const player = await MembershipAccount.findOne({
       where: { account_type: type, account_uuid: uuid },
     });
 
@@ -50,7 +50,7 @@ router.post("/membership", async (req, res) => {
         expiryDate.setDate(expiryDate.getDate() + parseInt(days));
       }
 
-      await MembershipPlayer.upsert({
+      await MembershipAccount.upsert({
         account_type: type,
         account_uuid: uuid,
         tier: tier,

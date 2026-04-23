@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../db");
 
-const EconomyPlayer = sequelize.define(
-  "economy_players",
+const EconomyAccount = sequelize.define(
+  "economy_accounts",
   {
     account_type: {
       type: DataTypes.STRING(100),
@@ -40,9 +40,9 @@ const EconomyPlayer = sequelize.define(
     },
   },
   {
-    tableName: "economy_players",
+    tableName: "economy_accounts",
     timestamps: false,
   }
 );
 
-module.exports = EconomyPlayer;
+module.exports = EconomyAccount;
