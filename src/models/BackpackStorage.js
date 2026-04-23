@@ -23,6 +23,11 @@ const BackpackStorage = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    is_locked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: "locking state to prevent item duplication",
+    },
   },
   {
     tableName: "backpack_storage",

@@ -9,7 +9,7 @@ const BackpackLog = require("../models/BackpackLog");
  */
 
 // POST /api/backpack
-// Request Body: { action: "get" | "save", uuid: string, player_uuid: string, contents?: string }
+// Request Body: { action: "get" | "save" | "lock" | "unlock", uuid: string, player_uuid: string, contents?: string }
 router.post("/backpack", async (req, res) => {
   const { action, uuid, player_uuid, contents } = req.body;
 
@@ -34,15 +34,54 @@ router.post("/backpack", async (req, res) => {
       // Find or create the backpack record if it doesn't exist
       const [backpack, created] = await BackpackStorage.findOrCreate({
         where: { uuid },
-        defaults: { contents: null }
+        defaults: { contents: null, is_locked: false }
       });
+
+      if (backpack.is_locked) {
+        return res.status(423).json({ 
+          error: "Backpack is locked", 
+          message: "This backpack is currently being accessed by another process." 
+        });
+      }
 
       return res.json({
         uuid: backpack.uuid,
         contents: backpack.contents,
         updated_at: backpack.updated_at,
+        is_locked: backpack.is_locked,
         message: created ? "New backpack record created" : "Existing backpack record found"
       });
+    }
+
+    // ACTION: LOCK
+    if (action === "lock") {
+      const [backpack] = await BackpackStorage.findOrCreate({
+        where: { uuid },
+        defaults: { contents: null, is_locked: true }
+      });
+
+      if (backpack.is_locked && !backpack._proudly_created) { // Sequelize internal flag for findOrCreate if created
+        // If it was already locked by someone else
+        return res.status(423).json({ error: "Backpack already locked" });
+      }
+
+      backpack.is_locked = true;
+      await backpack.save();
+
+      return res.json({ message: "Backpack locked", uuid: backpack.uuid });
+    }
+
+    // ACTION: UNLOCK
+    if (action === "unlock") {
+      const backpack = await BackpackStorage.findByPk(uuid);
+      if (!backpack) {
+        return res.status(404).json({ error: "Backpack not found" });
+      }
+
+      backpack.is_locked = false;
+      await backpack.save();
+
+      return res.json({ message: "Backpack unlocked", uuid: backpack.uuid });
     }
 
     // ACTION: SAVE
@@ -54,23 +93,25 @@ router.post("/backpack", async (req, res) => {
       // Find or create the backpack record
       const [backpack, created] = await BackpackStorage.findOrCreate({
         where: { uuid },
-        defaults: { contents }
+        defaults: { contents, is_locked: false }
       });
 
       if (!created) {
         // Update existing record
         backpack.contents = contents;
         backpack.updated_at = new Date();
+        // Auto-unlock on save to ensure state consistency
+        backpack.is_locked = false;
         await backpack.save();
       }
 
       return res.json({
-        message: created ? "Backpack created" : "Backpack updated",
+        message: created ? "Backpack created" : "Backpack updated and unlocked",
         uuid: backpack.uuid
       });
     }
 
-    return res.status(400).json({ error: "Invalid action. Use 'get' or 'save'." });
+    return res.status(400).json({ error: "Invalid action. Use 'get', 'save', 'lock', or 'unlock'." });
 
   } catch (error) {
     console.error("Backpack API Error:", error);
