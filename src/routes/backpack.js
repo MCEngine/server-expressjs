@@ -31,20 +31,17 @@ router.post("/backpack", async (req, res) => {
 
     // ACTION: GET
     if (action === "get") {
-      const backpack = await BackpackStorage.findByPk(uuid);
-      
-      if (!backpack) {
-        return res.json({ 
-          uuid, 
-          contents: null,
-          message: "No backpack found for this UUID" 
-        });
-      }
+      // Find or create the backpack record if it doesn't exist
+      const [backpack, created] = await BackpackStorage.findOrCreate({
+        where: { uuid },
+        defaults: { contents: null }
+      });
 
       return res.json({
         uuid: backpack.uuid,
         contents: backpack.contents,
-        updated_at: backpack.updated_at
+        updated_at: backpack.updated_at,
+        message: created ? "New backpack record created" : "Existing backpack record found"
       });
     }
 
