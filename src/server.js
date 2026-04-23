@@ -24,6 +24,7 @@ app.use("/api", verifyToken);
 // Routes
 app.use("/api", require("./routes/membership"));
 app.use("/api", require("./routes/economy"));
+app.use("/api", require("./routes/backpack"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
