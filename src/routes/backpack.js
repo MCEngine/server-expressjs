@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const BackpackStorage = require("../models/BackpackStorage");
-const BackpackLog = require("../models/BackpackLog");
+const BackpackStorage = require("../models/backpack/BackpackStorage");
+const BackpackLog = require("../models/backpack/BackpackLog");
 
 /**
  * Backpack Storage API

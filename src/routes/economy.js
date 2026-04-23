@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const EconomyAccount = require("../models/EconomyAccount");
+const EconomyAccount = require("../models/economy/EconomyAccount");
 
 // Token verification middleware (Applied via server.js for all /api routes)
 
