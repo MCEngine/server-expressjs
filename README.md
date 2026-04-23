@@ -6,11 +6,13 @@ This repository exposes two API groups for player membership and economy operati
 
 - `POST /api/membership` — membership tier lookup and updates
 - `POST /api/economy` — coin balance, add/remove currency, and account creation
+- `POST /api/backpack` — backpack item storage with multi-thread locking support
 
 ## Documentation
 
 - [Membership API](docs/MEMBERSHIP.md)
 - [Economy API](docs/ECONOMY.md)
+- [Backpack API](docs/BACKPACK.md)
 
 ## Authentication
 
