@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const BackpackStorage = require("../models/BackpackStorage");
+const BackpackLog = require("../models/BackpackLog");
 
 /**
  * Backpack Storage API
@@ -8,15 +9,26 @@ const BackpackStorage = require("../models/BackpackStorage");
  */
 
 // POST /api/backpack
-// Request Body: { action: "get" | "save", uuid: string, contents?: string }
+// Request Body: { action: "get" | "save", uuid: string, player_uuid: string, contents?: string }
 router.post("/backpack", async (req, res) => {
-  const { action, uuid, contents } = req.body;
+  const { action, uuid, player_uuid, contents } = req.body;
 
   if (!uuid) {
     return res.status(400).json({ error: "uuid is required" });
   }
 
+  if (!player_uuid) {
+    return res.status(400).json({ error: "player_uuid is required for tracking" });
+  }
+
   try {
+    // Log the attempt
+    await BackpackLog.create({
+      backpack_uuid: uuid,
+      player_uuid: player_uuid,
+      action: action
+    });
+
     // ACTION: GET
     if (action === "get") {
       const backpack = await BackpackStorage.findByPk(uuid);
