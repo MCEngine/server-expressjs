@@ -1,26 +1,20 @@
-# Use the official Node.js 20 slim image
-FROM node:20-bullseye-slim
+FROM node:20-bookworm
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Install OS dependencies required for native Node modules (bcrypt, sqlite3)
+# ติดตั้ง tool สำหรับคอมไพล์ native modules
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package.json and package-lock.json (if available)
 COPY package*.json ./
 
-# Install application dependencies
-RUN npm install
+# ล้างและติดตั้งใหม่ใน Container เท่านั้น
+RUN rm -rf node_modules && npm install
 
-# Copy the rest of the application code (including src/, .env, etc.)
 COPY . .
 
-# Expose the port the Express app runs on
 EXPOSE 3000
 
-# Start the server using the start script from package.json
 CMD ["npm", "start"]
