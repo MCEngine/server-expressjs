@@ -2,16 +2,14 @@
 
 ## Endpoint
 
-`POST /api/economy`
+`POST /api/economy` 
 
 ## Authentication
 
-All requests require a valid token in the JSON body.
+All requests require a valid Bearer token in the `Authorization` header.
 
-```json
-{
-  "token": "YOUR_API_TOKEN"
-}
+```http
+Authorization: Bearer YOUR_API_TOKEN
 ```
 
 ## Actions
@@ -21,7 +19,6 @@ All requests require a valid token in the JSON body.
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "get_coin",
   "account_type": "player",
   "account_uuid": "player-123"
@@ -50,7 +47,6 @@ Response example:
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "add_coin",
   "account_type": "player",
   "account_uuid": "player-123",
@@ -75,7 +71,6 @@ Response example:
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "minus_coin",
   "account_type": "player",
   "account_uuid": "player-123",
@@ -100,7 +95,6 @@ Response example:
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "create_account",
   "account_type": "player",
   "account_uuid": "player-123"

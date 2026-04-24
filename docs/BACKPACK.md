@@ -6,6 +6,14 @@ The Backpack API manages player backpack storage and access logging.
 
 `POST /api/backpack`
 
+## Authentication
+
+All requests require a valid Bearer token in the `Authorization` header.
+
+```http
+Authorization: Bearer YOUR_API_TOKEN
+```
+
 ## Actions
 
 <details>
@@ -15,7 +23,6 @@ Automatically creates a record with `null` contents if the UUID doesn't exist.
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "get",
   "uuid": "backpack-uuid-123",
   "player_uuid": "player-uuid-456"
@@ -45,7 +52,6 @@ Prevents other players/processes from opening or saving to the backpack. Used to
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "lock",
   "uuid": "backpack-uuid-123",
   "player_uuid": "player-uuid-456"
@@ -76,7 +82,6 @@ Response example (Already Locked - 423):
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "unlock",
   "uuid": "backpack-uuid-123",
   "player_uuid": "player-uuid-456"
@@ -99,7 +104,6 @@ Response example:
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "action": "save",
   "uuid": "backpack-uuid-123",
   "player_uuid": "player-uuid-456",
@@ -127,7 +131,6 @@ Response example:
 
 ```json
 {
-  "token": "YOUR_API_TOKEN",
   "logs": [
     {
       "backpack_uuid": "uuid-1",
