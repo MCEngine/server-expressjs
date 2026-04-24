@@ -2,20 +2,27 @@ require("dotenv").config();
 const express = require("express");
 require("./db");
 
-// Handle BigInt serialization for JSON
-BigInt.prototype.toJSON = function () {
-  return this.toString();
-};
-
 const app = express();
 app.use(express.json());
 
-// Global Token Verification Middleware
+// Safely handle BigInt serialization for JSON without global prototype pollution
+app.set('json replacer', (key, value) =>
+  typeof value === 'bigint' ? value.toString() : value
+);
+
+// Global Token Verification Middleware (Header-based)
 const verifyToken = (req, res, next) => {
-  const token = req.body.token;
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: Missing or invalid Authorization header" });
+  }
+
+  const token = authHeader.split(" ")[1];
   if (token !== process.env.API_TOKEN) {
     return res.status(401).json({ error: "Unauthorized: Invalid Token" });
   }
+  
   next();
 };
 

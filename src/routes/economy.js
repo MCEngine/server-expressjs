@@ -62,4 +62,3 @@ router.post("/economy", async (req, res) => {
 });
 
 module.exports = router;
-
