@@ -37,8 +37,11 @@ Plus the catalogue: `src/modules/product/` (repository, service, validation, rou
 jar inspector), `src/lib/zip.ts`, `src/storage/`, `src/http/multipart.ts`, and
 `wiki/security/artifact-upload.md`.
 
-**Does not exist:** the fleet. No registered servers, no installed-plugin inventory, no
-desired-state endpoint. No OAuth provider is wired — `linkIdentity` and
+Plus the fleet: `src/modules/fleet/` (repository, service, routes).
+
+**Does not exist:** the event logs. `audit_events` and `fleet_events` are in the schema and
+nothing writes to them. No external source resolver. No rate limiting, no artifact signing —
+both named under `Open` in `wiki/security/artifact-upload.md`. No OAuth provider is wired — `linkIdentity` and
 `signInWithIdentity` work and are tested, but no route performs a provider redirect. No rate
 limiting, though the contract specifies the limits. No Dockerfile and no CI workflow.
 
@@ -58,7 +61,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 187 tests passing across twelve
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 205 tests passing across thirteen
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -66,9 +69,8 @@ SIGTERM.
 
 ## Next step
 
-The fleet control plane: registered servers keyed by a generated `server_key`, the installed
-plugin inventory a server reports, the desired version the panel writes back, and the single
-`/fleet/servers/:id/desired` payload the plugin polls.
+The event logs: `audit_events` for what people do and `fleet_events` for what servers do,
+wired into the modules that already exist.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.

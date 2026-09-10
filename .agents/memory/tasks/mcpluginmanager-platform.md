@@ -360,3 +360,42 @@ product requires its id to be repeated in the body.
 
 Next task depends on: `ProductService.resolve` and `fileOf`, which the fleet uses to turn a
 desired version into a download and a checksum.
+
+### Task 12 — feat/fleet
+
+Registered servers, the inventory they report, the version the panel wants installed, and the
+single payload the plugin polls for.
+
+**A server's identity is a generated `server_key`, not its URL.** The original sketch made
+`server_url` both the identity and globally unique. Two operators can legitimately run behind
+one hostname, a server behind NAT has no public URL at all, and a URL changes when a host
+does — none of which should orphan a server's history. The URL is now optional metadata,
+unique per owner, and the key is returned exactly once at registration, the way an API token
+is. Two tests hold that line: the key never appears in a later read, and two operators may
+use the same URL while one operator may not use it twice.
+
+**Reporting an inventory is a replacement, not a patch.** A plugin removed by hand on the
+server simply stops appearing in the report; a patch would leave the row in the table forever.
+The desired version survives the replacement deliberately — it is the panel's intent, and the
+server does not get to overwrite it by reporting.
+
+**`desired_version` plus `state` is what makes this a control plane** rather than an
+inventory. The difference between the two columns *is* the work, and `desiredState` turns it
+into actions. It refuses to emit three things: an action for a version already installed, an
+action that would downgrade (a stale desired row after someone upgraded by hand), and an
+action whose version has since been deleted from the catalogue — each silently skipped rather
+than handing the plugin a download that would 404.
+
+**`poll_after_seconds` comes from the server.** Poll interval is a property of how loaded this
+service is, and a fleet that decides it independently cannot be slowed down when it needs to
+be.
+
+**A desired version is validated when it is set, not when it is polled.** The panel gets
+`404 version_not_found` while the person is still looking at the form, rather than the plugin
+discovering it hours later.
+
+Verified: `npm run check` green, 205 tests across thirteen suites, 18 of them new — including
+the full loop: report `2.19.0`, ask for `2.20.1`, receive an `update` action carrying the
+checksum and the download URL, report `2.20.1`, and watch the drift close.
+
+Next task depends on: nothing. The audit log wires into the modules that already exist.
