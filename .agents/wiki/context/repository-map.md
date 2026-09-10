@@ -41,15 +41,21 @@ there once, and this page links rather than repeats them.
 | `src/db/migrations/` | One file per migration. Never edited after shipping. |
 | `src/lib/clock.ts` | Injected time, so a cooldown boundary is testable. |
 | `src/modules/identity/` | Accounts, profiles, handles, emails, orgs, membership, settings. |
+| `src/modules/auth/` | scrypt passwords, OAuth identities, per-device sessions, scoped API tokens, and the guards. |
+| `src/http/params.ts` | Reads one route parameter as a string. Express 5 types them as `string \| string[]`. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There is no authentication**, so almost nothing is reachable. The identity domain is
-complete and tested, but the only routes mounted are `/health`, `/health/ready` and
-`GET /api/v1/accounts/:handle` — everything else needs a signed-in caller, and there is no
-way to become one yet. No products, no uploads, no fleet.
+**There is no catalogue and no fleet.** Identity and authentication are complete: register,
+sign in, refresh, sessions per device, org membership, scoped API tokens. Nothing yet
+publishes a product, stores a jar, or answers a Minecraft server.
+
+No storage driver, so `product_files.storage_key` is specified and nothing writes bytes. No
+OAuth provider is actually wired — `linkIdentity` and `signInWithIdentity` exist and are
+tested, but no route performs a provider redirect. No rate limiting yet, though the contract
+specifies the limits. No Dockerfile and no CI workflow; neither was asked for.
 
 No storage driver either — `product_files.storage_key` is specified but nothing writes bytes
 yet. No Dockerfile and no CI workflow; neither has been asked for.
@@ -108,6 +114,13 @@ Never an `INDEX.md`. Never a third documentation tree. The authority is
 * **`PRAGMA foreign_keys` is off by default in SQLite.** `dialect.ts` turns it on. Without
   it every foreign key in the schema is silently decorative, and the constraint suite would
   pass against a database enforcing nothing.
+* **`requireSession` and `requireScope` are different guards and both exist for a reason.**
+  A person's session satisfies any scope; an API token satisfies only what it was granted,
+  and is refused outright where a person is required — otherwise a leaked CI credential could
+  mint itself a wider one.
+* **An access token being valid is not enough.** Every request re-checks that the session it
+  names is still live, because a JWT stays valid for its whole TTL and signing out has to
+  mean something sooner than that.
 * **A module is repository, service, validation, routes — in that order of dependency.** The
   service holds every rule the database cannot; the repository holds every query and knows no
   rules; the router holds no logic beyond parsing and serializing.

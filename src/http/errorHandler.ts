@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
+import { ZodError } from 'zod';
 import { ApiError, errors, type ErrorBody } from '../errors.js';
 import type { Logger } from '../lib/logger.js';
 
@@ -40,6 +41,32 @@ export function createErrorHandler(logger: Logger): ErrorRequestHandler {
         path: req.path,
       });
       res.status(err.status).json(err.toBody());
+      return;
+    }
+
+    // A schema rejection is the caller's mistake, and the field that failed is
+    // the useful part of saying so. Translated here, once, so no route has to
+    // wrap every `parse` in a try/catch to get the documented envelope.
+    if (err instanceof ZodError) {
+      const body: ErrorBody = {
+        error: {
+          code: 'validation_failed',
+          message: 'The request body or query is not valid.',
+          details: {
+            issues: err.issues.map((issue) => ({
+              path: issue.path.join('.'),
+              message: issue.message,
+            })),
+          },
+        },
+      };
+      logger.warn('request rejected', {
+        requestId: req.requestId,
+        status: 400,
+        code: 'validation_failed',
+        path: req.path,
+      });
+      res.status(400).json(body);
       return;
     }
 

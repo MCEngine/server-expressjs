@@ -247,3 +247,58 @@ it answers an unused one.
 
 Next task depends on: `IdentityService`, which authentication calls to create an account on
 registration and to resolve an actor's org roles.
+
+### Task 10 — feat/authentication
+
+Credentials, OAuth identities, per-device sessions, scoped API tokens, the guards, and the
+identity routes that task 9 left unmounted because they had no caller.
+
+**scrypt rather than Argon2id.** Argon2id would be the first choice, but every Node binding
+is a native module that has to compile on the deployment machine. scrypt is memory-hard, is
+RFC 7914, and ships in `node:crypto` — a better trade than a build step for a service whose
+whole dependency list is six packages. The stored form carries its own parameters
+(`scrypt$N$r$p$salt$hash`) so raising the cost later still verifies old hashes, and
+`needsRehash` upgrades one on the next successful sign-in.
+
+**`jose` rather than a hand-rolled HS256.** Verifying a JWT is not primitive design, it is
+format handling — and format handling is exactly where alg-confusion bugs live. The algorithm
+is pinned on both sides, and there are tests for a tampered payload, a foreign signing key,
+a wrong audience, and `alg: none`.
+
+**Six decisions where the security is the design, not a check bolted on:**
+
+* **The refresh token is an HttpOnly cookie; the access token is in the body.** Script on the
+  panel's origin can read a JSON response and cannot read the cookie. The access token is
+  short-lived and the panel needs it in memory to set a header.
+* **Refresh tokens rotate, and reuse revokes everything.** A replayed token means it was
+  captured, so refusing only that request is not enough — every session on the account goes.
+* **An access token being validly signed is not enough.** Every request re-checks the session
+  it names is still live, because a JWT stays valid for its whole TTL and signing out has to
+  mean something sooner than that. The test asserts exactly this: log out, then present the
+  still-unexpired token.
+* **A failed sign-in verifies against a decoy hash** when the account does not exist, so the
+  failing path costs what the succeeding one costs and the response cannot be used to
+  enumerate registered addresses. The test asserts the two responses are byte-identical.
+* **`requireSession` and `requireScope` are different guards.** A person's session satisfies
+  any scope; an API token satisfies only what it holds, and is refused outright where a person
+  is required — otherwise a leaked CI credential could mint itself a wider one, which is a
+  test.
+* **An account always keeps one way in.** Unlinking the last identity from an account with no
+  password is refused.
+
+**A route parameter helper was needed.** Express 5 types `req.params.x` as
+`string | string[]`, because a pattern can repeat. None of these routes do, so an array means
+the request did something the route was not written for — `pathParam` makes that a 400 rather
+than a place to guess by taking the first element.
+
+**Zod rejections are translated once, in the error handler**, into the documented
+`validation_failed` envelope with the failing field paths. Otherwise every route would wrap
+each `parse` in a try/catch to get the shape the contract promises.
+
+Verified: `npm run check` green, 129 tests across ten suites, 32 of them new. The auth suite
+takes about nine seconds, which is scrypt working as intended. Built and run for real:
+registered an account, called `/me` with the returned token, got 401 anonymously, read the
+public profile, and minted an API token whose secret appears exactly once.
+
+Next task depends on: `requireScope('artifact:write')` and the `Actor` type, which the
+catalogue uses for CI uploads.

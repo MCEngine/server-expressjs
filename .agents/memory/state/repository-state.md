@@ -29,10 +29,14 @@ Kysely plugins, the migration runner and the initial migration), `src/lib/ids.ts
 Plus the identity domain: `src/modules/identity/` (repository, service, validation, the public
 account route) and `src/lib/clock.ts`.
 
-**Does not exist:** authentication — no credentials, no sessions, no API tokens, and so no
-authenticated routes; the identity service is complete but only `GET /accounts/:handle` is
-mounted. No products, no uploads, no fleet. No storage driver: `storage_key` is specified and
-nothing writes bytes yet. No Dockerfile and no CI workflow; neither was asked for.
+Plus authentication: `src/modules/auth/` (scrypt passwords, OAuth identities, per-device
+sessions with rotating refresh tokens, scoped API tokens, and the guards) and
+`src/http/params.ts`.
+
+**Does not exist:** the catalogue and the fleet. No products, no versions, no uploads, no
+storage driver, no registered servers. No OAuth provider is wired — `linkIdentity` and
+`signInWithIdentity` work and are tested, but no route performs a provider redirect. No rate
+limiting, though the contract specifies the limits. No Dockerfile and no CI workflow.
 
 ## Stack
 
@@ -50,7 +54,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 97 tests passing across nine
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 129 tests passing across ten
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -58,9 +62,9 @@ SIGTERM.
 
 ## Next step
 
-Authentication: password credentials, OAuth identities, per-device sessions with rotating
-refresh tokens, and scoped API tokens — then the authenticated identity routes, which are
-written but not yet mounted because they need a caller.
+The catalogue: products, versions, the storage driver, and the upload path with its nine
+ordered checks — magic bytes, zip parse, zip-slip, zip-bomb, descriptor match, and the quota
+read inside the write transaction.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.

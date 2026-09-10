@@ -24,6 +24,7 @@
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "express": "^5.1.0",
+    "jose": "^6.2.12",
     "kysely": "^0.29.5",
     "mysql2": "^3.24.4",
     "pg": "^8.23.0",

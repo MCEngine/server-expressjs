@@ -41,6 +41,14 @@ release, and is appended to as each task lands.
   exactly one primary, org membership and roles, and free-tier org settings.
 - `src/lib/clock.ts`, so a cooldown boundary is testable without sleeping.
 - `GET /api/v1/accounts/:handle`, the one identity route that needs no caller.
+- `src/modules/auth/` — scrypt password hashing from `node:crypto`, OAuth identities,
+  per-device sessions with rotating refresh tokens where reuse signs out everywhere, scoped
+  API tokens returned exactly once, and the `requireSession` and `requireScope` guards.
+- The authenticated identity routes: `/me`, emails, profile and handle changes, and the
+  organization member, transfer and settings routes.
+- `src/http/params.ts`, because Express 5 types a route parameter as `string | string[]`.
+- Zod rejections rendered as the documented `validation_failed` envelope, translated once in
+  the error handler rather than per route.
 
 ## Changed
 

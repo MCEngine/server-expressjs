@@ -2,6 +2,9 @@ import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { createLogger } from './lib/logger.js';
 import { createDatabase, databaseProbe, dialectTypes, migrateToLatest } from './db/index.js';
+import { systemClock } from './lib/clock.js';
+import { createIdentityRepository, createIdentityService } from './modules/identity/index.js';
+import { createAuthRepository, createAuthService } from './modules/auth/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -14,7 +17,20 @@ const database = await createDatabase(config);
 const { applied } = await migrateToLatest(database.db, dialectTypes(config.DATABASE_PROVIDER));
 if (applied.length > 0) logger.info('migrations applied', { migrations: applied });
 
-const app = createApp({ config, logger, probes: [databaseProbe(database)] });
+const identity = createIdentityService(createIdentityRepository(database.db), systemClock);
+const auth = createAuthService(
+  createAuthRepository(database.db),
+  identity,
+  config,
+  systemClock,
+);
+
+const app = createApp({
+  config,
+  logger,
+  probes: [databaseProbe(database)],
+  services: { identity, auth },
+});
 
 const server = app.listen(config.PORT, () => {
   logger.info('server listening', {
