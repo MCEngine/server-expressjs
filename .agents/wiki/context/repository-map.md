@@ -21,15 +21,30 @@ there once, and this page links rather than repeats them.
 | `.agents/memory/` | Current state and this repository's entries in the platform task record. |
 | `wiki/` | Human documentation, plus `wiki/logs/` for version history. |
 | `README.md`, `LICENSE` | Overview and the MIT license. |
+| `package.json` | `@mcengine/server-expressjs` at `0.0.0`. The version carrier. |
+| `tsconfig.json`, `tsconfig.build.json` | Strict TypeScript. The build config excludes tests. |
+| `vitest.config.ts` | Suites are `test/**/*.test.ts`. |
+| `src/config.ts` | The environment schema. Nothing else reads `process.env`. |
+| `src/errors.ts` | `ApiError` and one constructor per status the contract defines. |
+| `src/app.ts` | Builds the app from its dependencies. Never listens. |
+| `src/index.ts` | Loads config, listens, and shuts down gracefully on SIGTERM. |
+| `src/http/` | The request id middleware and the error handler. |
+| `src/routes/health.ts` | Liveness and readiness. |
+| `src/lib/logger.ts` | JSON-line logger over `console`, no dependency. |
+| `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
+| `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There is no code yet.** No `package.json`, no `src/`, no `tsconfig.json`, no
-`.gitignore`, no dependency lockfile, no test harness, no Dockerfile, no CI workflow.
+**There is no database and there are no domain routes.** No schema, no migrations, no ORM, no
+accounts, no products, no fleet. `/health` and `/health/ready` are the only routes that
+exist, and `createHealthRouter` is passed an empty list of probes because there is nothing
+yet to probe.
 
-That is not an oversight. The agent instruction system is the first task of a twenty-task
-plan; the runtime arrives in the Express skeleton task and the schema in the one after it.
-The plan table lives in `MCEngine/plugin-manager` at
+No Dockerfile and no CI workflow either; neither has been asked for.
+
+That is not an oversight. The runtime is one task of a twenty-task plan and the persistence
+layer is the next one. The plan table lives in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`, and this repository's own entries are in
 [`../../memory/tasks/mcpluginmanager-platform.md`](../../memory/tasks/mcpluginmanager-platform.md).
 
@@ -65,3 +80,11 @@ Never an `INDEX.md`. Never a third documentation tree. The authority is
   the contract documentation in the same commit breaks a consumer silently.
 * **Creating a log directory is a version claim** and needs explicit approval. Appending to
   the existing one does not.
+* **`createApp()` never listens.** Binding a port is `src/index.ts` alone. A test builds an
+  app per suite and drives it in-process, so nothing shares state between files and nothing
+  needs a free port.
+* **The environment is read once, in `src/config.ts`.** Reaching for `process.env` anywhere
+  else defeats the startup validation that makes a missing key a boot failure rather than a
+  request-time surprise.
+* **A test never mutates `process.env`.** `test/helpers.ts` builds a config from a literal;
+  the environment is shared state and it leaks between suite files.

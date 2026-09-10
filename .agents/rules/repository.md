@@ -26,6 +26,15 @@ memory.
 * **The package name is `@mcengine/server-expressjs`** and the version carrier is `version`
   in `package.json`. It is `0.0.0` and never moves without explicit user approval —
   `{shared}/rules/versioning.md`.
+* **`createApp()` takes its dependencies as arguments and never binds a port.** Listening is
+  `src/index.ts` alone. A route that reaches for a module-level singleton cannot be tested
+  against a failing dependency, which is the case worth testing.
+* **Every environment variable is declared in `src/config.ts`**, and nothing else reads
+  `process.env`. Adding a key means adding it there, to `.env.example`, and to
+  `wiki/environments/env.md` in the same commit.
+* **Every error a route raises is an `ApiError`.** Anything else that escapes is a defect and
+  is rendered as a bare `internal_error` with no message, because an unexpected exception's
+  message is the kind of thing that carries a query fragment or a path.
 * **This repository is one of three.** `MCEngine/plugin-manager` is the Minecraft plugin and
   `MCEngine/client-reactjs` is the web panel; both are clients of this service's HTTP API.
   A change to a route, a payload, or an error shape is a change to a contract two other
@@ -47,13 +56,20 @@ memory.
 
 ## Build and test commands
 
-**None yet.** This repository currently contains the agent instruction system, the two wiki
-trees, `README.md` and `LICENSE`. There is no `package.json`, so there is nothing to install
-and nothing to run.
+| Command | Purpose |
+|---|---|
+| `npm run check` | Typecheck, then the full suite. **This is what "verify" means here.** |
+| `npm run typecheck` | `tsc --noEmit` over `src/` and `test/` |
+| `npm test` | Vitest, once |
+| `npm run build` | Compile `src/` to `dist/` |
+| `npm start` | Run the compiled output — what production runs |
+| `npm run dev` | Watch mode through `tsx`, no build step |
 
-The runtime, the scripts and the test harness arrive with the Express skeleton task; this
-section and the repository map are rewritten by that task, and this line stops being true
-the moment it lands. **Do not infer commands that are not written here.**
+Full setup notes are in [`../../wiki/environments/setup.md`](../../wiki/environments/setup.md).
+
+**What "verify" means here.** The shared task workflow says to finish and verify each task
+before starting the next. In this repository that means `npm run check` passes — both halves,
+not just the tests.
 
 ## Version carriers in this repository
 
@@ -61,6 +77,6 @@ the moment it lands. **Do not infer commands that are not written here.**
 
 | Carrier | Where |
 |---|---|
-| Package version | `package.json` — does not exist yet |
+| Package version | `package.json` |
 | Log directories | `wiki/logs/{Major}/{Minor}/{Patch}/` |
 | Git tags and release drafts | GitHub releases |

@@ -1,0 +1,34 @@
+# --- [ Node ] ---
+node_modules/
+npm-debug.log*
+.npm/
+
+# --- [ Build output ] ---
+dist/
+*.tsbuildinfo
+
+# --- [ Test output ] ---
+coverage/
+
+# --- [ Local environment ] ---
+# .env carries secrets and a database URL and is never committed.
+# wiki/environments/env.md documents every key it should hold.
+.env
+.env.*
+!.env.example
+
+# --- [ Local data ] ---
+# The SQLite file the test and development profiles write to, and the
+# artifact bytes the storage driver writes when it is backed by the disk.
+*.sqlite
+*.sqlite-journal
+storage/
+
+# --- [ Editors ] ---
+.vscode/
+.idea/
+*.swp
+
+# --- [ OS ] ---
+.DS_Store
+Thumbs.db
