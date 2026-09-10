@@ -14,8 +14,9 @@ the `lxagents-agents-base` connector. It declares no overrides.
 
 **Exists:** `AGENTS.md`, `.claude/CLAUDE.md`, the six indexes under `.agents/index/`,
 `.agents/rules/repository.md`, `.agents/wiki/context/repository-map.md`, this memory tree,
-`wiki/information/overview.md`, `wiki/logs/0/0/0/CHANGELOG.md`, `README.md`, and `LICENSE`
-(MIT, MCEngine, 2026 — already present, not written by the setup).
+`wiki/information/overview.md`, `wiki/information/data-model.md`,
+`wiki/information/api-contract.md`, `wiki/logs/0/0/0/CHANGELOG.md`, `README.md`, and
+`LICENSE` (MIT, MCEngine, 2026 — already present, not written by the setup).
 
 **Does not exist:** every line of code. No `package.json`, no `src/`, no `tsconfig.json`, no
 `.gitignore`, no lockfile, no tests, no Dockerfile, no CI. The version carrier itself —
@@ -33,8 +34,8 @@ needs its own Prisma schema and supports no migrations.
 
 The Express skeleton: `package.json` at `0.0.0` naming `@mcengine/server-expressjs`,
 TypeScript configuration, the config and error-envelope layer, a health route, and the test
-harness. The data model and the API contract are documented first, in the task before it, so
-the schema is reviewable before any of it is implemented.
+harness. The data model and the API contract are now documented, so everything after this is
+checked against them rather than inventing its own shapes.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.
