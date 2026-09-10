@@ -32,6 +32,18 @@ memory.
 * **Every environment variable is declared in `src/config.ts`**, and nothing else reads
   `process.env`. Adding a key means adding it there, to `.env.example`, and to
   `wiki/environments/env.md` in the same commit.
+* **A rule the schema can carry, the schema carries.** Partial unique indexes and `CHECK`
+  constraints, not handler code — a rule that lives only in a handler is one a later refactor
+  routes around without failing a test. `test/db-constraints.test.ts` has one case per rule
+  and is the thing that catches schema drift, because the typed schema in `src/db/schema.ts`
+  is hand-written and nothing generates it. See
+  [`../memory/decisions/query-builder-over-orm.md`](../memory/decisions/query-builder-over-orm.md).
+* **A migration is never edited after it has shipped.** Add a new one. The set is a literal
+  list in `src/db/migrator.ts`, so adding one is a visible diff rather than a file that
+  silently is or is not present in `dist/`.
+* **Nothing outside `src/db/` knows which provider is running.** Dialect differences live in
+  `src/db/types.ts` and the two plugins; a repository that branches on the provider has put
+  the knowledge in the wrong place.
 * **Every error a route raises is an `ApiError`.** Anything else that escapes is a defect and
   is rendered as a bare `internal_error` with no message, because an unexpected exception's
   message is the kind of thing that carries a query fragment or a path.
