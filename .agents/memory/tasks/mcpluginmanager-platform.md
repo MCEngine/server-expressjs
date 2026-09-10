@@ -434,3 +434,34 @@ the whole publishing story appearing in order, a token-authored action being att
 the token, and an org's trail being refused to a stranger with a 404.
 
 Next task depends on: nothing. The external source resolver is self-contained.
+
+### Task 14 — feat/external-source
+
+Turning a SpigotMC, Modrinth, Hangar, GitHub Release or direct-URL reference into a jar this
+service holds, with a checksum it declared.
+
+**This service fetches; the plugin never does.** Handing the plugin a third-party URL would
+break the one rule it relies on — download only from a server it is configured to trust, and
+only against a checksum that server declared. So the bytes come here first, go through
+`inspectJar` exactly as an upload does, and are served back with the same headers a catalogue
+download has. A jar is not more trustworthy for having come from a well-known host.
+
+**Fetching a URL a caller chose is server-side request forgery unless it is constrained**,
+because this service can reach what the caller cannot. `src/lib/net.ts` allows HTTPS only, no
+credentials in the URL, no private IP literal, no `localhost` or `.internal` by name, and
+requires **every** address a hostname resolves to be public — a name with one public and one
+private answer is refused, because which one a later connection picks is not something the
+check controls. `169.254.169.254` has its own test.
+
+**Each source type validates its reference before interpolating it.** A resolver builds a URL
+by string interpolation, so `spigotmc` with a ref of `../../admin` would escape the API path
+it was building. Four tests, one per typed source.
+
+**Two gaps are written down rather than papered over**, in `wiki/security/external-fetch.md`:
+redirects are not re-validated, and resolving then connecting leaves a DNS-rebinding window
+that only a pinning agent closes. Both are in `Open` with what it would take.
+
+Verified: `npm run check` green, 249 tests across fifteen suites, 36 of them new.
+
+Next task depends on: nothing in this repository. This is the last server task before the
+release.

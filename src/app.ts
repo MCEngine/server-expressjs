@@ -9,6 +9,7 @@ import { attachActor, createAuthRouter, type AuthService } from './modules/auth/
 import { createProductRouter, type ProductService } from './modules/product/index.js';
 import { createFleetRouter, type FleetService } from './modules/fleet/index.js';
 import { createAuditRouter, nullAuditService, type AuditService } from './modules/audit/index.js';
+import { createSourceRouter, type SourceService } from './modules/source/index.js';
 import type { Storage } from './storage/index.js';
 
 /**
@@ -29,6 +30,7 @@ export interface AppServices {
    * about routing does not have to build a database to exercise a route.
    */
   readonly audit?: AuditService;
+  readonly sources?: SourceService;
 }
 
 export interface AppOptions {
@@ -96,6 +98,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
     if (services.identity !== undefined && services.audit !== undefined) {
       app.use('/api/v1', createAuditRouter(services.audit, services.identity, services.fleet));
     }
+  }
+
+  if (services.sources !== undefined && services.storage !== undefined) {
+    app.use('/api/v1', createSourceRouter(services.sources, services.storage));
   }
 
   app.use(notFoundHandler);
