@@ -4,11 +4,24 @@ import { createLogger, type Logger } from './lib/logger.js';
 import { requestContext } from './http/requestContext.js';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler.js';
 import { createHealthRouter, type ReadinessProbe } from './routes/health.js';
+import { createIdentityRouter, type IdentityService } from './modules/identity/index.js';
+
+/**
+ * The domain services the app mounts routes for.
+ *
+ * Optional, and a missing one simply mounts no routes: the health endpoints have
+ * to work in a container whose database has not come up, and a test that only
+ * exercises the error envelope should not have to build a database to do it.
+ */
+export interface AppServices {
+  readonly identity?: IdentityService;
+}
 
 export interface AppOptions {
   readonly config: Config;
   readonly logger?: Logger;
   readonly probes?: readonly ReadinessProbe[];
+  readonly services?: AppServices;
 }
 
 /**
@@ -18,7 +31,7 @@ export interface AppOptions {
  * listening — that is `src/index.ts`. A test builds an app per suite and drives
  * it in-process, so no port is bound and no file shares state between suites.
  */
-export function createApp({ config, logger, probes = [] }: AppOptions): Express {
+export function createApp({ config, logger, probes = [], services = {} }: AppOptions): Express {
   const log = logger ?? createLogger(config);
   const app = express();
 
@@ -39,6 +52,12 @@ export function createApp({ config, logger, probes = [] }: AppOptions): Express 
   app.use(express.json({ limit: '1mb' }));
 
   app.use(createHealthRouter(probes));
+
+  // Every domain route is under /api/v1. Health is not: an orchestrator probing
+  // it should not have to track the API version.
+  if (services.identity !== undefined) {
+    app.use('/api/v1', createIdentityRouter(services.identity));
+  }
 
   app.use(notFoundHandler);
   app.use(createErrorHandler(log));

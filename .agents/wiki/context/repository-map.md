@@ -39,14 +39,17 @@ there once, and this page links rather than repeats them.
 | `src/db/plugins.ts` | Normalizes driver results; rewrites booleans for SQLite. |
 | `src/db/migrator.ts` | The migration list, as a literal. |
 | `src/db/migrations/` | One file per migration. Never edited after shipping. |
+| `src/lib/clock.ts` | Injected time, so a cooldown boundary is testable. |
+| `src/modules/identity/` | Accounts, profiles, handles, emails, orgs, membership, settings. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There are no domain routes.** The schema exists and every constraint in it is tested, but
-nothing above it does: no accounts, no orgs, no tokens, no products, no uploads, no fleet.
-`/health` and `/health/ready` are still the only routes.
+**There is no authentication**, so almost nothing is reachable. The identity domain is
+complete and tested, but the only routes mounted are `/health`, `/health/ready` and
+`GET /api/v1/accounts/:handle` — everything else needs a signed-in caller, and there is no
+way to become one yet. No products, no uploads, no fleet.
 
 No storage driver either — `product_files.storage_key` is specified but nothing writes bytes
 yet. No Dockerfile and no CI workflow; neither has been asked for.
@@ -105,5 +108,8 @@ Never an `INDEX.md`. Never a third documentation tree. The authority is
 * **`PRAGMA foreign_keys` is off by default in SQLite.** `dialect.ts` turns it on. Without
   it every foreign key in the schema is silently decorative, and the constraint suite would
   pass against a database enforcing nothing.
+* **A module is repository, service, validation, routes — in that order of dependency.** The
+  service holds every rule the database cannot; the repository holds every query and knows no
+  rules; the router holds no logic beyond parsing and serializing.
 * **The test database is a real file, not `:memory:`.** WAL and foreign-key enforcement are
   what production uses, and an in-memory database differs on both.
