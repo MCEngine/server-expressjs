@@ -33,8 +33,12 @@ Plus authentication: `src/modules/auth/` (scrypt passwords, OAuth identities, pe
 sessions with rotating refresh tokens, scoped API tokens, and the guards) and
 `src/http/params.ts`.
 
-**Does not exist:** the catalogue and the fleet. No products, no versions, no uploads, no
-storage driver, no registered servers. No OAuth provider is wired — `linkIdentity` and
+Plus the catalogue: `src/modules/product/` (repository, service, validation, routes, and the
+jar inspector), `src/lib/zip.ts`, `src/storage/`, `src/http/multipart.ts`, and
+`wiki/security/artifact-upload.md`.
+
+**Does not exist:** the fleet. No registered servers, no installed-plugin inventory, no
+desired-state endpoint. No OAuth provider is wired — `linkIdentity` and
 `signInWithIdentity` work and are tested, but no route performs a provider redirect. No rate
 limiting, though the contract specifies the limits. No Dockerfile and no CI workflow.
 
@@ -54,7 +58,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 129 tests passing across ten
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 187 tests passing across twelve
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -62,9 +66,9 @@ SIGTERM.
 
 ## Next step
 
-The catalogue: products, versions, the storage driver, and the upload path with its nine
-ordered checks — magic bytes, zip parse, zip-slip, zip-bomb, descriptor match, and the quota
-read inside the write transaction.
+The fleet control plane: registered servers keyed by a generated `server_key`, the installed
+plugin inventory a server reports, the desired version the panel writes back, and the single
+`/fleet/servers/:id/desired` payload the plugin polls.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.

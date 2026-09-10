@@ -6,6 +6,8 @@ import { createErrorHandler, notFoundHandler } from './http/errorHandler.js';
 import { createHealthRouter, type ReadinessProbe } from './routes/health.js';
 import { createIdentityRouter, type IdentityService } from './modules/identity/index.js';
 import { attachActor, createAuthRouter, type AuthService } from './modules/auth/index.js';
+import { createProductRouter, type ProductService } from './modules/product/index.js';
+import type { Storage } from './storage/index.js';
 
 /**
  * The domain services the app mounts routes for.
@@ -17,6 +19,8 @@ import { attachActor, createAuthRouter, type AuthService } from './modules/auth/
 export interface AppServices {
   readonly identity?: IdentityService;
   readonly auth?: AuthService;
+  readonly products?: ProductService;
+  readonly storage?: Storage;
 }
 
 export interface AppOptions {
@@ -67,6 +71,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
 
   if (services.identity !== undefined) {
     app.use('/api/v1', createIdentityRouter(services.identity));
+  }
+
+  if (services.products !== undefined && services.identity !== undefined && services.storage !== undefined) {
+    app.use('/api/v1', createProductRouter(services.products, services.identity, services.storage));
   }
 
   app.use(notFoundHandler);
