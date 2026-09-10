@@ -15,6 +15,7 @@ import {
 import { createProductRepository, createProductService, type ProductService } from '../src/modules/product/index.js';
 import { createMemoryStorage } from '../src/storage/index.js';
 import { createFleetRepository, createFleetService, type FleetService } from '../src/modules/fleet/index.js';
+import { createAuditService, type AuditService } from '../src/modules/audit/index.js';
 import { createErrorHandler } from '../src/http/errorHandler.js';
 import type { Clock } from '../src/lib/clock.js';
 import type { Config } from '../src/config.js';
@@ -25,6 +26,7 @@ export interface Stack {
   auth: AuthService;
   products: ProductService;
   fleet: FleetService;
+  audit: AuditService;
   storage: ReturnType<typeof createMemoryStorage>;
   app: Express;
   config: Config;
@@ -46,11 +48,14 @@ export async function buildStack(overrides: Partial<NodeJS.ProcessEnv> = {}): Pr
   const products = createProductService(createProductRepository(db.db), identity, storage, clock);
 
   const fleet = createFleetService(createFleetRepository(db.db), products, clock);
+  const audit = createAuditService(db.db, clock, (error) => {
+    throw error instanceof Error ? error : new Error(String(error));
+  });
 
   const app = createApp({
     config,
     logger: recordingLogger(),
-    services: { identity, auth, products, fleet, storage },
+    services: { identity, auth, products, fleet, storage, audit },
   });
 
   return {
@@ -59,6 +64,7 @@ export async function buildStack(overrides: Partial<NodeJS.ProcessEnv> = {}): Pr
     auth,
     products,
     fleet,
+    audit,
     storage,
     app,
     config,

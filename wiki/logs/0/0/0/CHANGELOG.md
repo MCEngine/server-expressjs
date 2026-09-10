@@ -62,6 +62,8 @@ release, and is appended to as each task lands.
 - `src/modules/fleet/` — the control plane: servers identified by a generated key rather than
   their URL, an inventory that is replaced rather than patched, and one `desired` payload
   carrying every action with its checksum and download URL.
+- `src/modules/audit/` — two event tables with two readers: what people do, and what servers
+  do. A logging failure never fails the request that caused it.
 
 ## Changed
 

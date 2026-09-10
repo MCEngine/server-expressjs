@@ -7,6 +7,7 @@ import { pathParam } from '../../http/params.js';
 import { SCOPES } from './tokens.js';
 import type { ApiTokenRecord } from './repository.js';
 import type { AuthService, DeviceContext, IssuedSession } from './service.js';
+import type { AuditService } from '../audit/index.js';
 
 const REFRESH_COOKIE = 'mcpm_refresh';
 
@@ -52,7 +53,11 @@ function publicToken(record: ApiTokenRecord): Record<string, unknown> {
   };
 }
 
-export function createAuthRouter(auth: AuthService, secureCookies: boolean): Router {
+export function createAuthRouter(
+  auth: AuthService,
+  secureCookies: boolean,
+  audit: AuditService,
+): Router {
   const router = Router();
 
   /**
@@ -155,12 +160,29 @@ export function createAuthRouter(auth: AuthService, secureCookies: boolean): Rou
       expiresInDays: body.expiresInDays ?? null,
     });
 
+    await audit.record({
+      actor,
+      subjectType: 'token',
+      subjectId: record.id,
+      action: 'token.created',
+      metadata: { name: record.name, scopes: body.scopes },
+      ip: req.ip,
+    });
+
     res.status(201).json({ ...publicToken(record), token });
   });
 
   router.delete('/tokens/:id', requireSession, async (req, res) => {
     const actor = actorOf(req);
-    await auth.revokeApiToken(actor.accountId, pathParam(req, 'id'));
+    const tokenId = pathParam(req, 'id');
+    await auth.revokeApiToken(actor.accountId, tokenId);
+    await audit.record({
+      actor,
+      subjectType: 'token',
+      subjectId: tokenId,
+      action: 'token.revoked',
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 

@@ -47,14 +47,16 @@ there once, and this page links rather than repeats them.
 | `src/storage/` | Generated storage keys and the disk and memory drivers. |
 | `src/http/multipart.ts` | One-file multipart, capped while streaming. |
 | `src/modules/fleet/` | Registered servers, their inventory, and the desired-state payload. |
+| `src/modules/audit/` | Two event tables, written from the route layer. |
 | `src/http/params.ts` | Reads one route parameter as a string. Express 5 types them as `string \| string[]`. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**Nothing is logged.** `audit_events` and `fleet_events` exist in the schema and nothing
-writes to them. There is no external source resolver either.
+**There is no external source resolver.** Everything else the contract specifies exists,
+except rate limiting and artifact signing — both named under `Open` in
+`wiki/security/artifact-upload.md`.
 
 Identity, authentication, the catalogue and the fleet are complete: register, sign in,
 publish a versioned jar, register a server, report an inventory, set a desired version, and
@@ -128,6 +130,10 @@ Never an `INDEX.md`. Never a third documentation tree. The authority is
   path that joins a filename onto a path is the whole vulnerability.
 * **`src/lib/zip.ts` never decompresses, and must not start.** Every fact the upload path
   needs is in the central directory; extracting to learn a size is how a zip bomb wins.
+* **An audit write never fails a request.** It is a side effect of something that already
+  succeeded. Failures go to the logger, not to the caller.
+* **Recording happens in routes, not services.** The route is the only layer holding both the
+  actor and the subject, and the services stay free of HTTP.
 * **`requireSession` and `requireScope` are different guards and both exist for a reason.**
   A person's session satisfies any scope; an API token satisfies only what it was granted,
   and is refused outright where a person is required — otherwise a leaked CI credential could

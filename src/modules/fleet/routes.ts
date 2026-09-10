@@ -5,6 +5,7 @@ import { pathParam } from '../../http/params.js';
 import { actorOf, requireScope, requireSession } from '../auth/middleware.js';
 import type { FleetService } from './service.js';
 import type { InstalledPlugin, ServerRecord } from './repository.js';
+import type { AuditService } from '../audit/index.js';
 
 const platformSchema = z.enum(['spigot', 'paper', 'folia']);
 
@@ -68,7 +69,7 @@ function publicPlugin(plugin: InstalledPlugin): Record<string, unknown> {
   };
 }
 
-export function createFleetRouter(fleet: FleetService): Router {
+export function createFleetRouter(fleet: FleetService, audit: AuditService): Router {
   const router = Router();
 
   router.post('/fleet/servers', requireScope('fleet:write'), async (req, res) => {
@@ -78,6 +79,15 @@ export function createFleetRouter(fleet: FleetService): Router {
       ownerAccountId: actor.accountId,
       name: body.name,
       ...(body.serverUrl === undefined ? {} : { serverUrl: body.serverUrl }),
+    });
+
+    await audit.record({
+      actor,
+      subjectType: 'server',
+      subjectId: server.id,
+      action: 'server.registered',
+      metadata: { name: server.name },
+      ip: req.ip,
     });
 
     // The only response that carries the server key.
@@ -128,6 +138,11 @@ export function createFleetRouter(fleet: FleetService): Router {
       ...(body.mcVersion === undefined ? {} : { mcVersion: body.mcVersion }),
       ...(body.agentVersion === undefined ? {} : { agentVersion: body.agentVersion }),
     });
+    await audit.recordFleet({
+      serverId: server.id,
+      action: 'version_check',
+      detail: { reported: body.plugins.length },
+    });
     res.status(204).end();
   });
 
@@ -148,14 +163,32 @@ export function createFleetRouter(fleet: FleetService): Router {
       );
     }
 
-    await fleet.setDesiredVersion(server.id, pathParam(req, 'pluginId'), body.version, body.product);
+    const pluginId = pathParam(req, 'pluginId');
+    await fleet.setDesiredVersion(server.id, pluginId, body.version, body.product);
+    await audit.record({
+      actor,
+      subjectType: 'server',
+      subjectId: server.id,
+      action: 'server.desired_version_set',
+      metadata: { plugin_id: pluginId, version: body.version },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 
   router.delete('/fleet/servers/:id/plugins/:pluginId', requireSession, async (req, res) => {
     const actor = actorOf(req);
     const server = await fleet.requireServer(pathParam(req, 'id'), actor.accountId);
-    await fleet.markForDeletion(server.id, pathParam(req, 'pluginId'));
+    const pluginId = pathParam(req, 'pluginId');
+    await fleet.markForDeletion(server.id, pluginId);
+    await audit.record({
+      actor,
+      subjectType: 'server',
+      subjectId: server.id,
+      action: 'server.plugin_marked_for_deletion',
+      metadata: { plugin_id: pluginId },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 
@@ -172,6 +205,11 @@ export function createFleetRouter(fleet: FleetService): Router {
     const body = outcomeSchema.parse(req.body);
 
     await fleet.reportOutcome(server.id, body.pluginId, body.state, body.error ?? null);
+    await audit.recordFleet({
+      serverId: server.id,
+      action: body.state === 'failed' ? 'failed' : body.state === 'pending_delete' ? 'delete' : 'install',
+      detail: { plugin_id: body.pluginId, state: body.state, error: body.error ?? null },
+    });
     res.status(204).end();
   });
 

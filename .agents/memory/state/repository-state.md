@@ -39,8 +39,10 @@ jar inspector), `src/lib/zip.ts`, `src/storage/`, `src/http/multipart.ts`, and
 
 Plus the fleet: `src/modules/fleet/` (repository, service, routes).
 
-**Does not exist:** the event logs. `audit_events` and `fleet_events` are in the schema and
-nothing writes to them. No external source resolver. No rate limiting, no artifact signing —
+Plus the event logs: `src/modules/audit/`, wired into the identity, auth, product and fleet
+routes.
+
+**Does not exist:** the external source resolver. No rate limiting, no artifact signing —
 both named under `Open` in `wiki/security/artifact-upload.md`. No OAuth provider is wired — `linkIdentity` and
 `signInWithIdentity` work and are tested, but no route performs a provider redirect. No rate
 limiting, though the contract specifies the limits. No Dockerfile and no CI workflow.
@@ -61,7 +63,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 205 tests passing across thirteen
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 213 tests passing across fourteen
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -69,8 +71,9 @@ SIGTERM.
 
 ## Next step
 
-The event logs: `audit_events` for what people do and `fleet_events` for what servers do,
-wired into the modules that already exist.
+The external source resolver: turning a SpigotMC, Modrinth, Hangar, GitHub Release or direct
+URL reference into a downloadable file and a checksum, so a mirrored artifact and a catalogue
+artifact look identical to everything downstream.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.
