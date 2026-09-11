@@ -19,6 +19,19 @@ The production set is installed rather than copied out of the build stage, and t
 tidiness: `better-sqlite3` is a native module whose binary is bound to the platform and ABI it
 was installed for, and the build stage's tree also carries devDependencies that must not ship.
 
+**No stage carries a compiler, and every `npm ci` runs with `--ignore-scripts`.**
+`better-sqlite3` ships its binaries inside the package at `prebuilds/` — glibc and musl, x64 and
+arm64 — so there is nothing to build. The flag is what lets npm use them: npm runs
+`node-gyp rebuild` on its own for any package that has a `binding.gyp` and declares no `install`
+script, and without the flag the build stops looking for Python.
+
+The deps stage then opens an in-memory database before the build may continue. That one line is
+the difference between a broken prebuild path failing here, at the line responsible, and
+shipping an image that builds cleanly and dies on its first request.
+
+Adding a dependency that genuinely needs a `postinstall` is the case to watch: `--ignore-scripts`
+is per-install, not per-package, so it would be skipped silently.
+
 ## Run
 
 ```bash

@@ -75,3 +75,50 @@ two of them are `linuxmusl`. The correction quotes the wrong sentence so the rec
 readable as a record.
 
 Next task depends on: nothing beyond this record.
+
+### Task 2 — fix/native-module-build
+
+`--ignore-scripts` on both `npm ci` invocations, plus one line in the deps stage that proves the
+native addon loads before the build may continue.
+
+**The flag is the fix, and it is not about prebuild downloads.** `better-sqlite3` needs no
+download: its binaries are inside the published tarball at `prebuilds/`. npm compiled anyway,
+because it runs `node-gyp rebuild` on its own for any package with a `binding.gyp` and no
+`install` script — an implicit default no flag about binaries turns off. `--ignore-scripts` is
+what stops it.
+
+**The assertion matters more than the flag.** Without
+`node -e "new (require('better-sqlite3'))(':memory:').close()"`, a change that breaks the
+prebuild path yields an image that builds cleanly and fails on its first request. With it, the
+build fails at the line responsible.
+
+**Two documents stated the wrong reason and are corrected, not reworded.**
+`container-image-shape.md` keeps its original sentence as a block quote above the correction, so
+it still reads as a record of what was believed; `wiki/environments/deployment.md` gains the
+real mechanism and names the case to watch — `--ignore-scripts` is per-install, not per-package,
+so a dependency that genuinely needs a `postinstall` would be skipped silently.
+
+**The base image did not change**, and the reason for keeping it did. Not musl — musl prebuilds
+exist. `node:22-bookworm-slim` stays because glibc is what the `linux-x64` prebuild targets and
+what Node's official image defaults to.
+
+Verified, still without a Docker daemon, but this time against the thing that actually failed:
+
+* The deps stage command run **verbatim**, in a tree holding only `package.json`, the lockfile
+  and `dist/`: exits `0`, leaves no `build/` directory, and the in-memory database opens.
+* The service booted from that tree and answered `/health/ready` with the database check passing.
+* The build stage's `npm ci --ignore-scripts` installs the full dev tree — all twenty `@types`
+  packages — and `tsc` compiles. `esbuild`, the one devDependency with a `postinstall`, still
+  loads and reports its version, which is the risk `--ignore-scripts` carries being measured
+  rather than assumed.
+* The repository's own `node_modules` has no `build/Release` either, and 253 tests pass against
+  SQLite through it. The prebuilt binary has been what this project runs on all along.
+
+**A harness slip while checking this is worth recording.** One run of the build-stage check
+installed only 103 packages and failed with missing `@types`, which looked like `--ignore-scripts`
+breaking the install. It was `NODE_ENV=production` left exported from an earlier command in the
+same shell, which makes npm omit devDependencies. Re-run with `env -u NODE_ENV`, it installs the
+full tree and compiles. The flag was never the problem.
+
+Next task depends on: nothing. The release closes the record.
+

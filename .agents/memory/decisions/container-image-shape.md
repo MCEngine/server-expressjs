@@ -10,13 +10,22 @@ later change would otherwise re-litigate.
 
 ## Debian slim, not Alpine, for the server
 
-`better-sqlite3` is a **native module**. It ships prebuilt binaries for linux-x64 and
-linux-arm64 against **glibc**, and none against musl. On Alpine, `npm ci` therefore falls back
-to compiling it, which means `python3`, `make` and `g++` in the image — a build toolchain in a
-production runtime, for a dependency that has a prebuilt binary two lines away.
+> **Corrected.** This section originally read: *"It ships prebuilt binaries for linux-x64 and
+> linux-arm64 against **glibc**, and none against musl. On Alpine, `npm ci` therefore falls back
+> to compiling it."* That was wrong when it was written, and the first real `docker build`
+> proved it. `better-sqlite3@13.0.3` ships eight binaries in its own tarball at `prebuilds/`,
+> two of which are `linuxmusl`. Alpine would have worked. The original sentence is kept above so
+> this stays a record rather than a tidied one.
 
-`node:22-bookworm-slim` takes the prebuilt binary and needs no toolchain. The image is larger
-than Alpine's and that is the trade being made deliberately.
+`better-sqlite3` is a **native module**, and it carries its binaries inside the published
+package — glibc and musl, x64 and arm64. No base image needs a toolchain to install it, *provided
+npm is stopped from compiling it anyway*: npm runs `node-gyp rebuild` by itself for any package
+with a `binding.gyp` and no `install` script of its own. See
+[`native-module-install.md`](native-module-install.md), which is the authority on this.
+
+`node:22-bookworm-slim` stays because glibc is what the `linux-x64` prebuild targets and what
+Node's official image defaults to. Moving to Alpine would switch to the `linuxmusl` prebuild for
+no benefit — a smaller reason than the one first given here, and a true one.
 
 ## The runtime stage installs its own dependencies
 
