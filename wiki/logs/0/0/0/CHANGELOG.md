@@ -49,6 +49,16 @@ release, and is appended to as each task lands.
 - `src/http/params.ts`, because Express 5 types a route parameter as `string | string[]`.
 - Zod rejections rendered as the documented `validation_failed` envelope, translated once in
   the error handler rather than per route.
+- `src/modules/product/` — the catalogue: products owned by organizations, versions ordered
+  by their normalized form, and publishing from the panel or from CI through the same nine
+  ordered checks.
+- `src/lib/zip.ts` — a central-directory reader that never decompresses, so a zip bomb is
+  refused on its declared sizes rather than discovered by extracting it.
+- `src/storage/` — generated, sharded storage keys, so no caller-supplied string ever reaches
+  a filesystem path.
+- `src/http/multipart.ts` — a multipart reader that caps the file while streaming rather than
+  after buffering it.
+- `wiki/security/artifact-upload.md` — the threat model for accepting and serving jars.
 
 ## Changed
 

@@ -21,6 +21,12 @@ are plain markdown with no frontmatter. This index never writes into `.agents/`.
 | [`information/data-model.md`](../../wiki/information/data-model.md) | Every table, column and constraint, which rules the schema carries itself, and what stays portable across the four SQL engines. |
 | [`information/api-contract.md`](../../wiki/information/api-contract.md) | Every route, the three authentication schemes, the error envelope, the nine upload checks, and the one route the plugin polls. |
 
+## Security
+
+| File | Purpose |
+|---|---|
+| [`security/artifact-upload.md`](../../wiki/security/artifact-upload.md) | The threat model for accepting jars and serving them: what each guard is, where it lives, how to verify it, and the two gaps that remain open. |
+
 ## Environments
 
 | File | Purpose |

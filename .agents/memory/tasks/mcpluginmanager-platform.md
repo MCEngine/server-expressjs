@@ -302,3 +302,61 @@ public profile, and minted an API token whose secret appears exactly once.
 
 Next task depends on: `requireScope('artifact:write')` and the `Actor` type, which the
 catalogue uses for CI uploads.
+
+### Task 11 — feat/product
+
+The catalogue: products, versions, the storage layer, and the upload path with all nine
+ordered checks.
+
+**A hand-written zip reader, and it never decompresses.** `src/lib/zip.ts` parses the central
+directory and reads five fields per entry. That is every fact the upload path needs — names,
+count, declared uncompressed size, symlink bit — and decompressing to learn how big something
+decompresses to is exactly how a zip bomb wins. A general-purpose zip library's default
+behaviour is to extract, which is the one thing this must not do; the format is a frozen
+published specification, so it is read rather than depended on.
+
+**Path traversal is structurally absent, not defended against.** `generateStorageKey()`
+returns a sharded ULID and nothing derived from the caller touches it. The uploaded filename
+goes through `safeFileName` into `product_files.file_name` as *data*, whose only use is a
+quoted `Content-Disposition` value. There is no code path joining a caller string onto a
+path — a test asserts the stored key does not contain the uploaded name, and the disk
+driver still re-checks the key's shape and that it resolves under the root, because a defence
+that holds only while the layer above is correct is not a defence.
+
+**The quota check is the write.** A conditional
+`UPDATE ... WHERE storage_used_bytes + ? <= storage_quota_bytes`, with zero updated rows read
+as a refusal. That is atomic on all four engines and needs no row lock, where the obvious
+read-then-write lets two uploads racing on a nearly-full quota both pass the read. It also
+avoids `FOR UPDATE`, which SQLite does not have.
+
+**The object is written before the transaction, deliberately.** A failed transaction leaves an
+unreferenced object, which a sweep can find; a committed row pointing at nothing cannot be
+repaired. A refused publish deletes the object it wrote, and a test asserts that a rejected
+upload leaves neither a row nor an object.
+
+**A zip builder was written for the tests**, because no zip library will produce an archive
+that is deliberately wrong in one specific way — an entry whose path escapes, a symlink, a
+declared size that does not match its data. Two bugs in it were real and worth noting: `<<`
+in JavaScript is signed, so both the CRC and the shifted Unix mode came back negative and
+`writeUInt32LE` refused them.
+
+**The threat model is written now, not in task 6.** `{shared}/creators/security-creator.md`
+requires every row of a Surfaces table to name a guard a reader can open, and puts anything
+unimplemented in `Open` instead. Written before the code, the whole page would have been
+`Open` — a document that reads like protection and provides none. `wiki/security/artifact-upload.md`
+names real files, gives a command per check, and is honest about the two gaps: nothing rate
+limits yet, and artifacts are not signed.
+
+**`wiki/security/artifact-upload.md` carries no frontmatter**, unlike the shape the security
+creator shows. `wiki/` is plain markdown in this repository and its index says so. The two
+shared documents disagree on this point; raised as a discovery finding rather than resolved
+by inventing a local rule.
+
+Verified: `npm run check` green, 187 tests across twelve suites, 58 of them new. Among them:
+an escaping path, a backslash path, a symlink, a declared 4 GB expansion and a mod jar sent as
+a plugin are each refused; `1.10.0` lists above `1.9.0`; a private product answers a stranger
+exactly as a missing one does; deleting a version gives the storage back; and deleting a
+product requires its id to be repeated in the body.
+
+Next task depends on: `ProductService.resolve` and `fileOf`, which the fleet uses to turn a
+desired version into a download and a checksum.

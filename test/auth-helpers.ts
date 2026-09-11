@@ -12,6 +12,8 @@ import {
   actorOf,
   type AuthService,
 } from '../src/modules/auth/index.js';
+import { createProductRepository, createProductService, type ProductService } from '../src/modules/product/index.js';
+import { createMemoryStorage } from '../src/storage/index.js';
 import { createErrorHandler } from '../src/http/errorHandler.js';
 import type { Clock } from '../src/lib/clock.js';
 import type { Config } from '../src/config.js';
@@ -20,6 +22,8 @@ export interface Stack {
   db: TestDatabase;
   identity: IdentityService;
   auth: AuthService;
+  products: ProductService;
+  storage: ReturnType<typeof createMemoryStorage>;
   app: Express;
   config: Config;
   at: { value: Date };
@@ -36,16 +40,21 @@ export async function buildStack(overrides: Partial<NodeJS.ProcessEnv> = {}): Pr
 
   const identity = createIdentityService(createIdentityRepository(db.db), clock);
   const auth = createAuthService(createAuthRepository(db.db), identity, config, clock);
+  const storage = createMemoryStorage();
+  const products = createProductService(createProductRepository(db.db), identity, storage, clock);
+
   const app = createApp({
     config,
     logger: recordingLogger(),
-    services: { identity, auth },
+    services: { identity, auth, products, storage },
   });
 
   return {
     db,
     identity,
     auth,
+    products,
+    storage,
     app,
     config,
     at,

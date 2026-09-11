@@ -5,6 +5,8 @@ import { createDatabase, databaseProbe, dialectTypes, migrateToLatest } from './
 import { systemClock } from './lib/clock.js';
 import { createIdentityRepository, createIdentityService } from './modules/identity/index.js';
 import { createAuthRepository, createAuthService } from './modules/auth/index.js';
+import { createProductRepository, createProductService } from './modules/product/index.js';
+import { createDiskStorage } from './storage/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -25,11 +27,19 @@ const auth = createAuthService(
   systemClock,
 );
 
+const storage = createDiskStorage(config.STORAGE_DIR);
+const products = createProductService(
+  createProductRepository(database.db),
+  identity,
+  storage,
+  systemClock,
+);
+
 const app = createApp({
   config,
   logger,
   probes: [databaseProbe(database)],
-  services: { identity, auth },
+  services: { identity, auth, products, storage },
 });
 
 const server = app.listen(config.PORT, () => {

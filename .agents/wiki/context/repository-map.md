@@ -42,18 +42,23 @@ there once, and this page links rather than repeats them.
 | `src/lib/clock.ts` | Injected time, so a cooldown boundary is testable. |
 | `src/modules/identity/` | Accounts, profiles, handles, emails, orgs, membership, settings. |
 | `src/modules/auth/` | scrypt passwords, OAuth identities, per-device sessions, scoped API tokens, and the guards. |
+| `src/modules/product/` | The catalogue, and `jar.ts` — the nine ordered upload checks. |
+| `src/lib/zip.ts` | Reads a central directory. **Never decompresses.** |
+| `src/storage/` | Generated storage keys and the disk and memory drivers. |
+| `src/http/multipart.ts` | One-file multipart, capped while streaming. |
 | `src/http/params.ts` | Reads one route parameter as a string. Express 5 types them as `string \| string[]`. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There is no catalogue and no fleet.** Identity and authentication are complete: register,
-sign in, refresh, sessions per device, org membership, scoped API tokens. Nothing yet
-publishes a product, stores a jar, or answers a Minecraft server.
+**There is no fleet.** Identity, authentication and the catalogue are complete: register,
+sign in, publish a versioned jar from the panel or from CI, download it with its checksum.
+Nothing yet answers a Minecraft server.
 
-No storage driver, so `product_files.storage_key` is specified and nothing writes bytes. No
-OAuth provider is actually wired — `linkIdentity` and `signInWithIdentity` exist and are
+No rate limiting, though the contract specifies the limits, and no artifact signing — both
+are named in `wiki/security/artifact-upload.md` under `Open`. The disk storage driver is
+single-instance. No OAuth provider is actually wired — `linkIdentity` and `signInWithIdentity` exist and are
 tested, but no route performs a provider redirect. No rate limiting yet, though the contract
 specifies the limits. No Dockerfile and no CI workflow; neither was asked for.
 
@@ -114,6 +119,11 @@ Never an `INDEX.md`. Never a third documentation tree. The authority is
 * **`PRAGMA foreign_keys` is off by default in SQLite.** `dialect.ts` turns it on. Without
   it every foreign key in the schema is silently decorative, and the constraint suite would
   pass against a database enforcing nothing.
+* **Nothing derived from a caller ever reaches a filesystem path.** Storage keys are
+  generated. This is not a check to maintain, it is an absence to preserve — adding a code
+  path that joins a filename onto a path is the whole vulnerability.
+* **`src/lib/zip.ts` never decompresses, and must not start.** Every fact the upload path
+  needs is in the central directory; extracting to learn a size is how a zip bomb wins.
 * **`requireSession` and `requireScope` are different guards and both exist for a reason.**
   A person's session satisfies any scope; an API token satisfies only what it was granted,
   and is refused outright where a person is required — otherwise a leaked CI credential could
