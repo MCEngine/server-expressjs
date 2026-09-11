@@ -39,7 +39,6 @@ docker run -d --name mcpm-server \
   -p 3000:3000 \
   -v mcpm-data:/data \
   -e JWT_SECRET="$(openssl rand -base64 36)" \
-  -e PANEL_ORIGIN=https://panel.example.com \
   mcengine/server-expressjs:0.0.0
 ```
 
@@ -128,7 +127,6 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set me}
       DATABASE_PROVIDER: sqlite
       DATABASE_URL: file:/data/app.sqlite
-      PANEL_ORIGIN: http://localhost:8080
     volumes:
       - mcpm-data:/data
 
@@ -150,5 +148,9 @@ The server is not published on a host port here: nothing but the panel needs to 
 it one only to call the API directly — a CI job publishing a version, for instance — and
 remember that doing so makes it a second origin for anything a browser does.
 
-`PANEL_ORIGIN` must match the origin a person types into their browser, since it is what the
-service allows cross-origin requests from.
+**`PANEL_ORIGIN` is not what permits any of this, and it is not in the examples above for that
+reason.** This service has no CORS layer and hardcodes its refresh cookie to `SameSite=Lax`, so
+a panel served from any origin but the one it calls fails at the preflight and then has no
+cookie to refresh with — whatever `PANEL_ORIGIN` says. The variable is validated at startup and
+read by nothing; [`env.md`](env.md) shows both failures measured. The panel's image exists so
+the question does not arise.

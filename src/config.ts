@@ -34,7 +34,16 @@ const schema = z.object({
   /** Where artifact bytes are written when storage is backed by the disk. */
   STORAGE_DIR: z.string().min(1).default('./storage'),
 
-  /** Public origin of the web panel, for CORS and OAuth redirects. */
+  /**
+   * Public origin of the web panel.
+   *
+   * **Validated here and read nowhere.** It is reserved for an OAuth redirect
+   * this service does not yet issue, and it does not configure CORS -- there is
+   * no CORS layer to configure, and the refresh cookie is `SameSite=Lax`, so a
+   * panel on another origin fails at the preflight and then has no cookie to
+   * refresh with. The panel's container image proxies `/api` to this service
+   * for exactly that reason. Wiring this up is a change here, not a setting.
+   */
   PANEL_ORIGIN: z.string().url().default('http://localhost:5173'),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
