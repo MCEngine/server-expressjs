@@ -74,6 +74,15 @@ one that asks.
   and constrained so a caller cannot use it to reach a private address.
 - `wiki/security/external-fetch.md` — the threat model for fetching a URL a caller chose.
 
+- `Dockerfile` and `.dockerignore` — a three-stage image on `node:22-bookworm-slim`, running as
+  the base image's unprivileged user, with `/data` as a volume for artifacts and, under SQLite,
+  the database. The production dependencies are installed in their own stage rather than copied
+  out of the build one, because `better-sqlite3` is a native module and the build tree carries
+  devDependencies that must not ship.
+- `wiki/environments/deployment.md` — building and running the container, what lives on the
+  volume, why the healthcheck calls readiness rather than liveness, and the compose example that
+  puts the panel in front.
+
 ## Changed
 
 - **Publishing a version moved to `PUT /api/v1/products/:id/versions/:version`**, from

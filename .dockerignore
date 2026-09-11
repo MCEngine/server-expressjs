@@ -1,0 +1,33 @@
+# Everything the build does not need. This file is not a tidiness preference:
+# without it the whole working tree goes to the daemon as build context, which
+# means .env and dev.sqlite reach the build and node_modules is uploaded only
+# to be discarded by `npm ci`.
+
+.git
+.gitignore
+.github
+
+node_modules
+dist
+coverage
+
+.env
+.env.*
+!.env.example
+
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+storage/
+
+.agents
+wiki
+README.md
+LICENSE
+
+test
+vitest.config.ts
+
+Dockerfile
+.dockerignore
