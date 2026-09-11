@@ -96,6 +96,11 @@ before the first connection. See
 [`../decisions/native-module-install.md`](../decisions/native-module-install.md) and
 [`../decisions/writable-paths.md`](../decisions/writable-paths.md).
 
+**Organizations are administrable over the API.** `GET /me/orgs` lists what an account belongs
+to, `/orgs/:handle/tokens` gives an org its own credentials, and `POST /tokens` no longer takes
+an unchecked owner — that one was a privilege escalation, recorded in
+`../tasks/org-management.md` with the regression test that fails against the old code.
+
 ## Stack
 
 **Installed:** Node 22, Express 5, TypeScript 5.8 in strict mode with

@@ -135,4 +135,19 @@ one that asks.
   about a free web service being unable to receive private network traffic. Nothing about the
   service changed; a deployment showing no demo account is the flag being off, which the page
   now says where it will be read.
+- **`POST /tokens` checks who a token may belong to.** It took `ownerAccountId` from the request
+  body and wrote it unchecked, and a token authenticates **as its owner** — so any signed-in
+  person could mint a credential that acts as somebody else, their organizations and their right
+  to publish included. Account ids are public (`GET /accounts/:handle` needs none), so nothing
+  had to be guessed. The owner is now checked against the rule the identity routes already use —
+  your own account, or an organization you administer — which lives in
+  `src/modules/identity/authorize.ts` so both routers ask one question.
+- `GET`, `POST` and `DELETE` `/orgs/:handle/tokens` — **tokens an organization owns**, listed,
+  minted and revoked by an `admin`. A token an org owns acts for that org at `owner`, which is
+  what makes it usable for CI that outlives the person who set it up; `requireRole` gained that
+  one branch, restricted to accounts that are organizations. It administers nothing: every route
+  that governs an org needs a signed-in user and refuses a token with `session_required`.
+- `GET /me/orgs` — the organizations the caller belongs to, with the role held. The repository
+  query existed already and no route exposed it, which is why an organization was reachable only
+  by knowing its handle.
 

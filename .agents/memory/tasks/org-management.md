@@ -117,3 +117,8 @@ Under `/me` rather than `/orgs` deliberately: it is a fact about the caller, not
 organizations, and there is no route that lists organizations. Four cases, including that an API
 token is refused — `session_required` — and that the list is the caller's own rather than
 everyone's.
+
+### Task 5 — chore/org-management-release
+
+The changelog entries, the state file, and this record. `0.0.0` did not move. The panel's three
+tasks follow and depend on tasks 3 and 4 being merged first.
