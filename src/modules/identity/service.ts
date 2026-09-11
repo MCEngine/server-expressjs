@@ -294,6 +294,28 @@ export function createIdentityService(
     },
 
     async requireRole(orgId, userId, atLeast) {
+      /*
+       * The organization acting for itself.
+       *
+       * An API token owned by an org authenticates *as* the org, and an org has
+       * never had a membership row for itself -- so such a token could do
+       * nothing at all. That is the shape CI wants: a credential that does not
+       * stop working when the person who made it leaves.
+       *
+       * **Organizations only.** `requireRole` is also called with an account
+       * that turns out to be a user -- creating a product under your own handle
+       * is the case -- and answering that one `owner` would let a caller past a
+       * check that exists to stop it. It falls through to the membership lookup
+       * and the `404` below, as it did before this branch existed.
+       *
+       * Otherwise reachable only by an API token: a session actor's account id
+       * is a user account, and `requireSession` refuses a token outright, so
+       * this grants nothing on the routes that administer an organization.
+       */
+      if (orgId === userId && (await repo.findAccountById(orgId))?.type === 'org') {
+        return 'owner';
+      }
+
       const membership = await repo.findMembership(orgId, userId);
       if (membership === undefined) {
         // 404 rather than 403: a non-member should not learn that an org exists

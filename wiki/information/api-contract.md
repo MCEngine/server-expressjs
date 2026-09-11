@@ -115,6 +115,14 @@ becoming unreachable: an account must retain at least one of a password or an id
 | `DELETE` | `/orgs/:handle/members/:userId` | session, `admin`+ | Refused for the owner |
 | `POST` | `/orgs/:handle/transfer` | session, `owner` | One transaction: demote, promote |
 | `GET` | `/orgs/:handle/settings` | session, `admin`+ | Tier, quota, usage |
+| `GET` | `/orgs/:handle/tokens` | session, `admin`+ | The org's own tokens; never a secret |
+| `POST` | `/orgs/:handle/tokens` | session, `admin`+ | **The only response that contains the token** |
+| `DELETE` | `/orgs/:handle/tokens/:id` | session, `admin`+ | Revokes immediately |
+
+**A token an organization owns acts for that organization**, at `owner`. That is what makes it
+usable for CI: it does not stop working when the person who created it leaves, and it reaches
+nothing outside the org. It cannot administer the org either — every route that does needs a
+signed-in user, and an API token is refused with `session_required`.
 
 Removing the owner is refused rather than cascaded. An org with no owner has no one who can
 delete it or transfer it, which is a state with no exit.
