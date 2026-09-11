@@ -25,9 +25,11 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | File | Purpose |
 |---|---|
 | [`tasks/mcpluginmanager-platform.md`](../memory/tasks/mcpluginmanager-platform.md) | This repository's entries in the MCPluginManager platform plan. The plan table itself lives in `MCEngine/plugin-manager`. |
+| [`tasks/version-route.md`](../memory/tasks/version-route.md) | Addressing a product version by its path: the confirmed four-task plan across two repositories, and one entry per task. |
 
 ## Decisions
 
 | File | Purpose |
 |---|---|
 | [`decisions/query-builder-over-orm.md`](../memory/decisions/query-builder-over-orm.md) | Why the persistence layer uses Kysely and hand-written migrations instead of Prisma, which the plan named. |
+| [`decisions/version-addressed-by-path.md`](../memory/decisions/version-addressed-by-path.md) | Why publishing writes to `PUT /products/:id/versions/:version`, and why a version in the body is refused rather than ignored. |
