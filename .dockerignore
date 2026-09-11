@@ -19,7 +19,11 @@ coverage
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
-storage/
+
+# Anchored, for the same reason the .gitignore entry is: this names the one
+# directory the disk driver writes into, not every directory called `storage`.
+# Its unanchored twin in .gitignore kept src/storage/ out of the repository.
+/storage/
 
 .agents
 wiki

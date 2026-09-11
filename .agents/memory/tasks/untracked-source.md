@@ -75,3 +75,42 @@ assertion gets run against the broken tree first, because a regression test that
 failed is a regression test nobody has checked.
 
 Next task depends on: nothing beyond this record.
+
+### Task 2 — fix/untracked-source
+
+Committed `src/storage/index.ts`, anchored the patterns that hid it, and added the guard.
+
+**The file is committed as-is.** No line changed: it is what 253 passing tests, every local
+build and the running service have been using all along. The repository simply did not have it.
+
+**Three patterns anchored, one deliberately left alone.** `/storage/`, `/dist/` and `/coverage/`
+each name one known directory at the repository root, and now say so. `node_modules/` stays
+unanchored because it legitimately appears at any depth — which is the case the unanchored form
+is actually for. `.dockerignore` got the same treatment, so the pattern means the same thing
+whichever tool reads it.
+
+**The guard was written against the broken tree first and watched to fail**, naming
+`src/storage/index.ts` in its message, before anything was fixed. A regression test that has
+never failed is a regression test nobody has checked.
+
+It asserts one thing — **nothing under `src/` may be git-ignored** — by running
+`git ls-files --others --ignored --exclude-standard -- src`. It skips silently where there is no
+git work tree, because the invariant is about the repository and there is no repository there to
+assert it against.
+
+Verified against the environment that actually failed, not the one that passed:
+
+| Check | Result |
+|---|---|
+| The guard, **before** the fix | fails, listing `src/storage/index.ts` |
+| The guard, after | passes |
+| `git check-ignore src/storage/index.ts` | no longer ignored; tracked normally, not force-added |
+| `npm run check` | green — **254** tests across sixteen suites |
+| A fresh `git clone` of this branch | `npm ci --ignore-scripts` and `npm run build` both succeed |
+| `src/storage/` in that clone | present |
+
+The clone is the check that matters. Every check in the previous two tasks ran in a working
+directory that already had the file; this one runs where the Docker build runs.
+
+Next task depends on: nothing. The release closes the record.
+

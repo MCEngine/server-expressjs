@@ -1,14 +1,20 @@
 # --- [ Node ] ---
+# Unanchored on purpose: this one legitimately appears at any depth, which is
+# the case the unanchored form is actually for. Every pattern below that names
+# one known directory at the repository root is anchored with a leading slash,
+# because an unanchored pattern matches at *every* depth -- `storage/` once
+# swallowed `src/storage/` and that module went uncommitted for weeks. See
+# .agents/memory/decisions/gitignore-anchoring.md.
 node_modules/
 npm-debug.log*
 .npm/
 
 # --- [ Build output ] ---
-dist/
+/dist/
 *.tsbuildinfo
 
 # --- [ Test output ] ---
-coverage/
+/coverage/
 
 # --- [ Local environment ] ---
 # .env carries secrets and a database URL and is never committed.
@@ -20,9 +26,12 @@ coverage/
 # --- [ Local data ] ---
 # The SQLite file the test and development profiles write to, and the
 # artifact bytes the storage driver writes when it is backed by the disk.
+#
+# Anchored: unanchored, this also matched `src/storage/` -- the module that
+# implements the driver -- and kept it out of the repository entirely.
 *.sqlite
 *.sqlite-journal
-storage/
+/storage/
 
 # --- [ Editors ] ---
 .vscode/
