@@ -5,6 +5,7 @@ import { requestContext } from './http/requestContext.js';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler.js';
 import { createHealthRouter, type ReadinessProbe } from './routes/health.js';
 import { createIdentityRouter, type IdentityService } from './modules/identity/index.js';
+import { attachActor, createAuthRouter, type AuthService } from './modules/auth/index.js';
 
 /**
  * The domain services the app mounts routes for.
@@ -15,6 +16,7 @@ import { createIdentityRouter, type IdentityService } from './modules/identity/i
  */
 export interface AppServices {
   readonly identity?: IdentityService;
+  readonly auth?: AuthService;
 }
 
 export interface AppOptions {
@@ -55,16 +57,20 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
 
   // Every domain route is under /api/v1. Health is not: an orchestrator probing
   // it should not have to track the API version.
+  //
+  // The actor is resolved before any route runs and rejected by none of them:
+  // several routes are public, and the guards are mounted per route.
+  if (services.auth !== undefined) {
+    app.use('/api/v1', attachActor(services.auth));
+    app.use('/api/v1', createAuthRouter(services.auth, config.NODE_ENV === 'production'));
+  }
+
   if (services.identity !== undefined) {
     app.use('/api/v1', createIdentityRouter(services.identity));
   }
 
   app.use(notFoundHandler);
   app.use(createErrorHandler(log));
-
-  // Referenced so the config is threaded through even before routes read it,
-  // and so adding the first one does not change this signature.
-  void config;
 
   return app;
 }

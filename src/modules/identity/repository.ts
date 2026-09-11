@@ -81,10 +81,16 @@ export interface InsertAccount {
   at: string;
 }
 
+/**
+ * A partial profile update. `undefined` means "leave it alone" and `null` means
+ * "clear it" — which is why the optional properties spell `undefined` out under
+ * `exactOptionalPropertyTypes`: a caller building this from parsed JSON has a
+ * key present and undefined, not a key absent.
+ */
 export interface ProfilePatch {
-  displayName?: string;
-  bio?: string | null;
-  avatarUrl?: string | null;
+  displayName?: string | undefined;
+  bio?: string | null | undefined;
+  avatarUrl?: string | null | undefined;
 }
 
 export interface InsertEmail {

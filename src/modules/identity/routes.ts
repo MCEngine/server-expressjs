@@ -1,7 +1,16 @@
 import { Router } from 'express';
-import { handleSchema } from './validation.js';
+import { z } from 'zod';
+import {
+  createOrgSchema,
+  emailSchema,
+  handleSchema,
+  orgRoleSchema,
+  updateProfileSchema,
+} from './validation.js';
 import { errors } from '../../errors.js';
-import type { AccountRecord } from './repository.js';
+import { pathParam } from '../../http/params.js';
+import { requireSession, actorOf } from '../auth/middleware.js';
+import type { AccountRecord, EmailRecord } from './repository.js';
 import type { IdentityService } from './service.js';
 
 /**
@@ -24,19 +33,182 @@ export function publicAccount(account: AccountRecord): Record<string, unknown> {
   };
 }
 
+/** An email address as its owner sees it. Nobody else ever sees one. */
+function ownEmail(email: EmailRecord): Record<string, unknown> {
+  return {
+    id: email.id,
+    email: email.email,
+    is_primary: email.is_primary,
+    verified: email.verified_at !== null,
+  };
+}
+
 export function createIdentityRouter(identity: IdentityService): Router {
   const router = Router();
 
-  router.get('/accounts/:handle', async (req, res) => {
-    const parsed = handleSchema.safeParse(req.params.handle);
+  /** Resolves `:handle` to an account, or 404s the same way for either reason. */
+  const accountFrom = async (raw: string): Promise<AccountRecord> => {
+    const parsed = handleSchema.safeParse(raw);
     if (!parsed.success) {
       // A malformed handle cannot name anything, so this is 404 rather than
       // 400 -- it says the same thing as a well-formed handle nobody holds.
       throw errors.notFound('account_not_found', 'No such account.');
     }
+    return identity.getByHandle(parsed.data);
+  };
 
-    const account = await identity.getByHandle(parsed.data);
+  /**
+   * Throws unless the caller may administer `account`.
+   *
+   * A user administers themselves. An org is administered by its members at the
+   * required role, which `requireRole` answers with 404 for a non-member so an
+   * org is not discoverable by probing.
+   */
+  const assertMayAdminister = async (
+    account: AccountRecord,
+    callerId: string,
+    role: 'admin' | 'maintainer' | 'member' = 'admin',
+  ): Promise<void> => {
+    if (account.type === 'user') {
+      if (account.id !== callerId) throw errors.notFound('account_not_found', 'No such account.');
+      return;
+    }
+    await identity.requireRole(account.id, callerId, role);
+  };
+
+  router.get('/accounts/:handle', async (req, res) => {
+    res.json(publicAccount(await accountFrom(pathParam(req, 'handle'))));
+  });
+
+  router.get('/me', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const account = await identity.requireAccount(actor.accountId);
     res.json(publicAccount(account));
+  });
+
+  router.patch('/accounts/:handle', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const account = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(account, actor.accountId);
+
+    const patch = updateProfileSchema.parse(req.body);
+    res.json(publicAccount(await identity.updateProfile(account.id, patch)));
+  });
+
+  router.put('/accounts/:handle/handle', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const account = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(account, actor.accountId);
+
+    const { handle } = z.object({ handle: handleSchema }).parse(req.body);
+    res.json(publicAccount(await identity.changeHandle(account.id, handle)));
+  });
+
+  router.get('/me/emails', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const emails = await identity.listEmails(actor.accountId);
+    res.json({ data: emails.map(ownEmail) });
+  });
+
+  router.post('/me/emails', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const { email } = z.object({ email: emailSchema }).parse(req.body);
+    res.status(201).json(ownEmail(await identity.addEmail(actor.accountId, email)));
+  });
+
+  router.post('/me/emails/:id/primary', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    await identity.makePrimary(actor.accountId, pathParam(req, 'id'));
+    res.status(204).end();
+  });
+
+  router.delete('/me/emails/:id', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    await identity.removeEmail(actor.accountId, pathParam(req, 'id'));
+    res.status(204).end();
+  });
+
+  router.post('/orgs', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const body = createOrgSchema.parse(req.body);
+    const org = await identity.createOrg({ ...body, ownerUserId: actor.accountId });
+    res.status(201).json(publicAccount(org));
+  });
+
+  router.get('/orgs/:handle/members', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(org, actor.accountId, 'member');
+
+    const members = await identity.listMembers(org.id);
+    res.json({
+      data: await Promise.all(
+        members.map(async (m) => {
+          const account = await identity.requireAccount(m.user_id);
+          return { role: m.role, joined_at: m.created_at, user: publicAccount(account) };
+        }),
+      ),
+    });
+  });
+
+  router.post('/orgs/:handle/members', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(org, actor.accountId);
+
+    const body = z.object({ handle: handleSchema, role: orgRoleSchema }).parse(req.body);
+    const user = await identity.getByHandle(body.handle);
+    await identity.addMember(org.id, user.id, body.role, actor.accountId);
+    res.status(204).end();
+  });
+
+  router.patch('/orgs/:handle/members/:userHandle', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(org, actor.accountId);
+
+    const { role } = z.object({ role: orgRoleSchema }).parse(req.body);
+    const user = await accountFrom(pathParam(req, 'userHandle'));
+    await identity.changeRole(org.id, user.id, role);
+    res.status(204).end();
+  });
+
+  router.delete('/orgs/:handle/members/:userHandle', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(org, actor.accountId);
+
+    const user = await accountFrom(pathParam(req, 'userHandle'));
+    await identity.removeMember(org.id, user.id);
+    res.status(204).end();
+  });
+
+  router.post('/orgs/:handle/transfer', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await accountFrom(pathParam(req, 'handle'));
+
+    // Only the owner, and `transferOwnership` checks that too -- this is the
+    // cheap check that keeps a non-member from learning the org exists.
+    await identity.requireRole(org.id, actor.accountId, 'owner');
+
+    const { handle } = z.object({ handle: handleSchema }).parse(req.body);
+    const heir = await identity.getByHandle(handle);
+    await identity.transferOwnership(org.id, actor.accountId, heir.id);
+    res.status(204).end();
+  });
+
+  router.get('/orgs/:handle/settings', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await accountFrom(pathParam(req, 'handle'));
+    await assertMayAdminister(org, actor.accountId);
+
+    const settings = await identity.orgSettings(org.id);
+    res.json({
+      membership_tier: settings.membership_tier,
+      storage_quota_bytes: settings.storage_quota_bytes,
+      storage_used_bytes: settings.storage_used_bytes,
+      max_file_bytes: settings.max_file_bytes,
+    });
   });
 
   return router;

@@ -59,9 +59,15 @@ memory.
 * **Never build a filesystem path from user input.** Uploaded filenames are stored as data;
   the path a file is written to is a generated opaque key. This is the whole of the
   path-traversal defence and it has no exceptions.
-* **Secrets are stored hashed, never in plaintext.** Passwords with a memory-hard hash,
-  tokens and refresh tokens as digests with a separate non-secret prefix for lookup and
-  display.
+* **Secrets are stored hashed, never in plaintext.** Passwords with scrypt from
+  `node:crypto`, which is memory-hard and needs no native build; API tokens and refresh
+  tokens as SHA-256 digests, with a separate non-secret prefix for lookup and display. A
+  token is returned by exactly one route, once, at creation.
+* **A failed sign-in must not say which addresses are registered.** The unknown-account path
+  verifies against a decoy hash so it costs the same as the wrong-password path, and both
+  return the same code and the same words.
+* **An account always keeps at least one way in.** Removing the last identity from an account
+  with no password is refused; there is no support flow to undo it.
 * **Docs and indexes.** Keep both wiki trees current with any structural change, and update
   the index that owns the changed scope in the same commit. See
   `{shared}/creators/index-creator.md`.
