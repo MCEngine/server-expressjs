@@ -121,3 +121,12 @@ one that asks.
   instead of publishing the wrong one.
 - `README.md` rewritten from a bare title into an overview: what the service is, its place
   in the platform, and links into `wiki/`.
+- **`PANEL_ORIGIN` is documented as what it is: validated at startup and read by nothing.**
+  `wiki/environments/deployment.md` had claimed it "is what the service allows cross-origin
+  requests from" — this service has no CORS layer at all, and its refresh cookie is
+  `SameSite=Lax` in code, so a panel on another origin fails at the preflight and then has no
+  cookie to refresh with. A deployment followed that sentence into an outage. Both pages now
+  say so, the variable is out of the `docker run` and compose examples, and the field's comment
+  says it is reserved for a redirect this service does not yet issue. Nothing changed about how
+  the service behaves.
+

@@ -120,20 +120,23 @@ SIGTERM.
 
 ## Next step
 
-**Seven plans are finished and all seven records are closed.** The twenty-task platform plan
+**Eight plans are finished and all eight records are closed.** The twenty-task platform plan
 (`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
 to `PUT /api/v1/products/:id/versions/:version`, the container-image plan
 (`../tasks/container-image.md`, also here), `../tasks/native-module-build.md`, which fixed
 the image build that plan shipped broken, `../tasks/untracked-source.md`, which committed a
 source file an ignore pattern had kept out of the repository, `../tasks/writable-data.md`,
-which stopped the image defaulting its database onto a read-only path, and
-`../tasks/demo-and-landing.md`, which added the demo account and `GET /meta`. Follow-up work
-opens a new record rather than appending to any of them.
+which stopped the image defaulting its database onto a read-only path,
+`../tasks/demo-and-landing.md`, which added the demo account and `GET /meta`, and
+`../tasks/same-origin-api.md`, which corrected documentation claiming that `PANEL_ORIGIN`
+configures CORS. Follow-up work opens a new record rather than appending to any of them.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies
 and nothing enforces; artifact signing, which is the difference between "these bytes survived
 the wire" and "this org published them" and needs `MCEngine/plugin-manager` to carry the
-public key; an OAuth provider redirect, since linking and signing in already work beneath it;
+public key; an OAuth provider redirect, since linking and signing in already work beneath it —
+and it is what `PANEL_ORIGIN` is reserved for, the one variable this service validates and never
+reads (`../decisions/no-cors-layer.md`);
 and a CI workflow that builds and pushes the image the Dockerfile now
 defines. A first shipping version is a version claim and therefore asks first.
