@@ -399,3 +399,38 @@ the full loop: report `2.19.0`, ask for `2.20.1`, receive an `update` action car
 checksum and the download URL, report `2.20.1`, and watch the drift close.
 
 Next task depends on: nothing. The audit log wires into the modules that already exist.
+
+### Task 13 — feat/audit-log
+
+Two event tables, written from the route layer, plus the routes that read them back.
+
+**Recorded at the route layer, not in the services.** The route is the only place that has
+both the actor and the subject; pushing the audit service down into every service would mean
+threading a logging dependency through code that has no other reason to know about HTTP.
+The services stay pure, and the record sits next to the response it describes.
+
+**A logging failure never fails the request.** An audit write is a side effect of an action
+that has already succeeded, and turning a logging problem into a user-visible error makes the
+service less reliable than not logging at all. Two tests hold this: writing against a dropped
+table resolves rather than rejecting, and the failure still reaches the caller's `onError`
+so it is reported rather than silently dropped.
+
+**Two tables because they have two readers.** An operator debugging a failed update should
+not be paging through org membership changes, and an org owner auditing who deleted a product
+should not be paging through version checks. `fleet_events` is high-volume by design — every
+server, every interval — and is indexed for pruning by age rather than joined on a request
+path.
+
+**Both actor columns exist and at most one is set.** Knowing that a CI token published
+something, rather than a person, is usually the whole point of looking; a single
+`actor_id` could not say it.
+
+**The download route records a fleet event only when the caller names one of its own
+servers**, and it takes the server *id* rather than the server key — a key is a credential,
+and a URL ends up in access logs.
+
+Verified: `npm run check` green, 213 tests across fourteen suites, 8 of them new — including
+the whole publishing story appearing in order, a token-authored action being attributable to
+the token, and an org's trail being refused to a stranger with a 404.
+
+Next task depends on: nothing. The external source resolver is self-contained.

@@ -7,6 +7,8 @@ import { actorOf, requireScope, requireSession } from '../auth/middleware.js';
 import type { IdentityService } from '../identity/index.js';
 import type { ProductService } from './service.js';
 import type { Storage } from '../../storage/index.js';
+import type { AuditService } from '../audit/index.js';
+import type { FleetService } from '../fleet/index.js';
 import type { FileRecord, ProductRecord, VersionRecord } from './repository.js';
 import {
   channelSchema,
@@ -69,6 +71,8 @@ export function createProductRouter(
   products: ProductService,
   identity: IdentityService,
   storage: Storage,
+  audit: AuditService,
+  fleet?: FleetService,
 ): Router {
   const router = Router();
 
@@ -123,6 +127,14 @@ export function createProductRouter(
     await identity.requireRole(org.id, actor.accountId, 'maintainer');
 
     const product = await products.create({ ...body, orgId: org.id });
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: org.id,
+      action: 'product.created',
+      metadata: { product_id: product.id, slug: product.slug },
+      ip: req.ip,
+    });
     res.status(201).json(publicProduct(product));
   });
 
@@ -155,7 +167,16 @@ export function createProductRouter(
     await assertRole(product, actor.accountId, 'admin');
 
     const { slug } = z.object({ slug: slugSchema }).parse(req.body);
-    res.json(publicProduct(await products.changeSlug(product.id, slug)));
+    const renamed = await products.changeSlug(product.id, slug);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: product.owner_org_id,
+      action: 'product.slug_changed',
+      metadata: { product_id: product.id, from: product.slug, to: slug },
+      ip: req.ip,
+    });
+    res.json(publicProduct(renamed));
   });
 
   router.delete('/products/:id', requireSession, async (req, res) => {
@@ -167,6 +188,14 @@ export function createProductRouter(
     // this is the guard that survives someone scripting against the API.
     const { slug } = z.object({ slug: z.string() }).parse(req.body);
     await products.remove(product.id, slug);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: product.owner_org_id,
+      action: 'product.deleted',
+      metadata: { product_id: product.id, slug: product.slug },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 
@@ -242,6 +271,19 @@ export function createProductRouter(
       uploadSource: actor.kind === 'session' ? 'web' : 'ci',
     });
 
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: product.owner_org_id,
+      action: 'product.version_published',
+      metadata: {
+        product_id: product.id,
+        version: version.version,
+        source: actor.kind === 'session' ? 'web' : 'ci',
+      },
+      ip: req.ip,
+    });
+
     res.status(201).json(
       publicVersion(
         version,
@@ -281,6 +323,27 @@ export function createProductRouter(
     res.setHeader('Content-Disposition', `attachment; filename="${file.file_name}"`);
 
     await products.recordDownload(product.id);
+
+    // A download that names a server is fleet activity, and is recorded as such.
+    // The id is used rather than the server key: a key is a credential, and a
+    // URL ends up in access logs.
+    const serverId = typeof req.query['server'] === 'string' ? req.query['server'] : undefined;
+    if (serverId !== undefined && fleet !== undefined && req.actor !== undefined) {
+      const server = await fleet
+        .requireServer(serverId, req.actor.accountId)
+        .catch(() => undefined);
+      if (server !== undefined) {
+        await audit.recordFleet({
+          serverId: server.id,
+          action: 'download',
+          productId: product.id,
+          versionId: version.id,
+          bytesSent: file.size_bytes,
+          detail: { version: version.version },
+        });
+      }
+    }
+
     const stream = await storage.open(file.storage_key);
     stream.pipe(res);
   });
@@ -290,7 +353,16 @@ export function createProductRouter(
     const product = await visibleProduct(pathParam(req, 'id'), actor.accountId);
     await assertRole(product, actor.accountId, 'maintainer');
 
-    await products.deleteVersion(product.id, pathParam(req, 'version'));
+    const removed = pathParam(req, 'version');
+    await products.deleteVersion(product.id, removed);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: product.owner_org_id,
+      action: 'product.version_deleted',
+      metadata: { product_id: product.id, version: removed },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 

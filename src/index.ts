@@ -8,6 +8,7 @@ import { createAuthRepository, createAuthService } from './modules/auth/index.js
 import { createProductRepository, createProductService } from './modules/product/index.js';
 import { createDiskStorage } from './storage/index.js';
 import { createFleetRepository, createFleetService } from './modules/fleet/index.js';
+import { createAuditService } from './modules/audit/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -38,11 +39,19 @@ const products = createProductService(
 
 const fleet = createFleetService(createFleetRepository(database.db), products, systemClock);
 
+const audit = createAuditService(database.db, systemClock, (error) => {
+  // A logging failure must never fail the request that caused it, but it must
+  // not be silent either.
+  logger.error('audit write failed', {
+    error: error instanceof Error ? error.message : String(error),
+  });
+});
+
 const app = createApp({
   config,
   logger,
   probes: [databaseProbe(database)],
-  services: { identity, auth, products, fleet, storage },
+  services: { identity, auth, products, fleet, storage, audit },
 });
 
 const server = app.listen(config.PORT, () => {

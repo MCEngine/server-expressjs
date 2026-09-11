@@ -12,6 +12,7 @@ import { pathParam } from '../../http/params.js';
 import { requireSession, actorOf } from '../auth/middleware.js';
 import type { AccountRecord, EmailRecord } from './repository.js';
 import type { IdentityService } from './service.js';
+import type { AuditService } from '../audit/index.js';
 
 /**
  * The public view of an account.
@@ -43,7 +44,7 @@ function ownEmail(email: EmailRecord): Record<string, unknown> {
   };
 }
 
-export function createIdentityRouter(identity: IdentityService): Router {
+export function createIdentityRouter(identity: IdentityService, audit: AuditService): Router {
   const router = Router();
 
   /** Resolves `:handle` to an account, or 404s the same way for either reason. */
@@ -101,7 +102,16 @@ export function createIdentityRouter(identity: IdentityService): Router {
     await assertMayAdminister(account, actor.accountId);
 
     const { handle } = z.object({ handle: handleSchema }).parse(req.body);
-    res.json(publicAccount(await identity.changeHandle(account.id, handle)));
+    const updated = await identity.changeHandle(account.id, handle);
+    await audit.record({
+      actor: req.actor,
+      subjectType: account.type === 'org' ? 'org' : 'account',
+      subjectId: account.id,
+      action: 'account.handle_changed',
+      metadata: { from: account.handle, to: handle },
+      ip: req.ip,
+    });
+    res.json(publicAccount(updated));
   });
 
   router.get('/me/emails', requireSession, async (req, res) => {
@@ -132,6 +142,14 @@ export function createIdentityRouter(identity: IdentityService): Router {
     const actor = actorOf(req);
     const body = createOrgSchema.parse(req.body);
     const org = await identity.createOrg({ ...body, ownerUserId: actor.accountId });
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: org.id,
+      action: 'org.created',
+      metadata: { handle: org.handle },
+      ip: req.ip,
+    });
     res.status(201).json(publicAccount(org));
   });
 
@@ -159,6 +177,14 @@ export function createIdentityRouter(identity: IdentityService): Router {
     const body = z.object({ handle: handleSchema, role: orgRoleSchema }).parse(req.body);
     const user = await identity.getByHandle(body.handle);
     await identity.addMember(org.id, user.id, body.role, actor.accountId);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: org.id,
+      action: 'org.member_added',
+      metadata: { user: user.handle, role: body.role },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 
@@ -170,6 +196,14 @@ export function createIdentityRouter(identity: IdentityService): Router {
     const { role } = z.object({ role: orgRoleSchema }).parse(req.body);
     const user = await accountFrom(pathParam(req, 'userHandle'));
     await identity.changeRole(org.id, user.id, role);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: org.id,
+      action: 'org.member_role_changed',
+      metadata: { user: user.handle, role },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 
@@ -180,6 +214,14 @@ export function createIdentityRouter(identity: IdentityService): Router {
 
     const user = await accountFrom(pathParam(req, 'userHandle'));
     await identity.removeMember(org.id, user.id);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: org.id,
+      action: 'org.member_removed',
+      metadata: { user: user.handle },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 
@@ -194,6 +236,14 @@ export function createIdentityRouter(identity: IdentityService): Router {
     const { handle } = z.object({ handle: handleSchema }).parse(req.body);
     const heir = await identity.getByHandle(handle);
     await identity.transferOwnership(org.id, actor.accountId, heir.id);
+    await audit.record({
+      actor,
+      subjectType: 'org',
+      subjectId: org.id,
+      action: 'org.ownership_transferred',
+      metadata: { to: heir.handle },
+      ip: req.ip,
+    });
     res.status(204).end();
   });
 

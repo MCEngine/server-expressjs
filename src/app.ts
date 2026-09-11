@@ -8,6 +8,7 @@ import { createIdentityRouter, type IdentityService } from './modules/identity/i
 import { attachActor, createAuthRouter, type AuthService } from './modules/auth/index.js';
 import { createProductRouter, type ProductService } from './modules/product/index.js';
 import { createFleetRouter, type FleetService } from './modules/fleet/index.js';
+import { createAuditRouter, nullAuditService, type AuditService } from './modules/audit/index.js';
 import type { Storage } from './storage/index.js';
 
 /**
@@ -23,6 +24,11 @@ export interface AppServices {
   readonly products?: ProductService;
   readonly fleet?: FleetService;
   readonly storage?: Storage;
+  /**
+   * Where actions are recorded. Defaults to one that records nothing, so a test
+   * about routing does not have to build a database to exercise a route.
+   */
+  readonly audit?: AuditService;
 }
 
 export interface AppOptions {
@@ -66,21 +72,30 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
   //
   // The actor is resolved before any route runs and rejected by none of them:
   // several routes are public, and the guards are mounted per route.
+  const audit = services.audit ?? nullAuditService();
+
   if (services.auth !== undefined) {
     app.use('/api/v1', attachActor(services.auth));
-    app.use('/api/v1', createAuthRouter(services.auth, config.NODE_ENV === 'production'));
+    app.use('/api/v1', createAuthRouter(services.auth, config.NODE_ENV === 'production', audit));
   }
 
   if (services.identity !== undefined) {
-    app.use('/api/v1', createIdentityRouter(services.identity));
+    app.use('/api/v1', createIdentityRouter(services.identity, audit));
   }
 
   if (services.products !== undefined && services.identity !== undefined && services.storage !== undefined) {
-    app.use('/api/v1', createProductRouter(services.products, services.identity, services.storage));
+    app.use(
+      '/api/v1',
+      createProductRouter(services.products, services.identity, services.storage, audit, services.fleet),
+    );
   }
 
   if (services.fleet !== undefined) {
-    app.use('/api/v1', createFleetRouter(services.fleet));
+    app.use('/api/v1', createFleetRouter(services.fleet, audit));
+
+    if (services.identity !== undefined && services.audit !== undefined) {
+      app.use('/api/v1', createAuditRouter(services.audit, services.identity, services.fleet));
+    }
   }
 
   app.use(notFoundHandler);
