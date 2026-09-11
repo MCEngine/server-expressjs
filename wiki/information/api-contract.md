@@ -139,10 +139,15 @@ What enabling it costs is in [`../environments/env.md`](../environments/env.md).
 | Method | Route | Auth | Notes |
 |---|---|---|---|
 | `GET` | `/tokens` | session | Lists prefix, name, scopes, last use — never the secret |
-| `POST` | `/tokens` | session | **The only response that contains the token** |
+| `POST` | `/tokens` | session | **The only response that contains the token.** `ownerAccountId` must be the caller's own account or an org they administer |
 | `DELETE` | `/tokens/:id` | session | Revokes immediately |
 
 `POST /tokens` returns `{ "token": "mcpm_a1b2c3d4<secret>", "prefix": "a1b2c3d4", ... }` once.
+
+**A token authenticates as its owner**, so `ownerAccountId` decides what it can do. It is
+checked against the same rule as every other "may I act for this account" question — your own
+account, or an organization where you are `admin` or above — because account ids are public and
+an unchecked owner would let anyone mint a credential that acts as somebody else.
 There is no route that returns it again, because the service does not have it — only the
 digest is stored.
 

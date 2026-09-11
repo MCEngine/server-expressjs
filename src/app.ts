@@ -83,7 +83,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
 
   if (services.auth !== undefined) {
     app.use('/api/v1', attachActor(services.auth));
-    app.use('/api/v1', createAuthRouter(services.auth, config.NODE_ENV === 'production', audit));
+    app.use(
+      '/api/v1',
+      createAuthRouter(services.auth, config.NODE_ENV === 'production', audit, services.identity),
+    );
   }
 
   if (services.identity !== undefined) {

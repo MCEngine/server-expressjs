@@ -5,6 +5,8 @@ import { createAccountSchema, emailSchema } from '../identity/validation.js';
 import { requireSession, actorOf } from './middleware.js';
 import { pathParam } from '../../http/params.js';
 import { SCOPES } from './tokens.js';
+import { assertMayAdminister } from '../identity/authorize.js';
+import type { IdentityService } from '../identity/service.js';
 import type { ApiTokenRecord } from './repository.js';
 import type { AuthService, DeviceContext, IssuedSession } from './service.js';
 import type { AuditService } from '../audit/index.js';
@@ -57,6 +59,7 @@ export function createAuthRouter(
   auth: AuthService,
   secureCookies: boolean,
   audit: AuditService,
+  identity?: IdentityService,
 ): Router {
   const router = Router();
 
@@ -152,8 +155,30 @@ export function createAuthRouter(
     const actor = actorOf(req);
     const body = createTokenSchema.parse(req.body);
 
+    /*
+     * Who the token may belong to.
+     *
+     * This used to take `ownerAccountId` from the body and write it. Account
+     * ids are public -- `GET /accounts/:handle` needs no credential and returns
+     * one -- so anybody signed in could mint a token owned by somebody else's
+     * account, and `authenticate()` returns that owner as the actor: the token
+     * *was* that person, with their memberships and their right to publish.
+     *
+     * Same rule as every other "may I act for this account" question, and the
+     * same function. With no identity service wired the answer is no, which is
+     * the safe direction for a partially assembled app.
+     */
+    const ownerAccountId = body.ownerAccountId ?? actor.accountId;
+    if (ownerAccountId !== actor.accountId) {
+      if (identity === undefined) {
+        throw errors.notFound('account_not_found', 'No such account.');
+      }
+      const owner = await identity.requireAccount(ownerAccountId);
+      await assertMayAdminister(identity, owner, actor.accountId);
+    }
+
     const { token, record } = await auth.createApiToken({
-      ownerAccountId: body.ownerAccountId ?? actor.accountId,
+      ownerAccountId,
       createdBy: actor.accountId,
       name: body.name,
       scopes: body.scopes,
