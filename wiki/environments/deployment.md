@@ -58,8 +58,24 @@ Everything else has a default. The defaults baked into the image are `NODE_ENV=p
 | `/data/storage` | Every published jar | Always |
 | Wherever `DATABASE_URL` points | The database | Only with `DATABASE_PROVIDER=sqlite` |
 
-With SQLite, point `DATABASE_URL` inside the volume — `file:/data/app.sqlite` — or the database
-is written into the container's writable layer and is gone when the container is replaced.
+With SQLite the image already points `DATABASE_URL` at `file:/data/app.sqlite`, inside the
+volume. **Do not move it back to a relative path.** `/app` is created by `WORKDIR` as root and
+the image runs unprivileged, so a relative default resolves somewhere the service cannot write;
+that is a crash on boot, not a fallback.
+
+**If you attach a real disk at `/data`, check who owns it.** Some platforms mount a volume owned
+by `root`, and this image runs as uid 1000 — the configuration is then correct and the service
+still cannot write. Startup checks every directory it needs before opening anything and fails
+with the path and that reason, rather than with a driver error that names neither:
+
+```
+STORAGE_DIR is not writable: /data/storage. This service runs as an unprivileged user, so
+every directory it writes to must be owned by that user — a volume mounted here as root will
+fail this check even though the configuration is correct.
+```
+
+The remedy is to make the mount writable by uid 1000, or to point `STORAGE_DIR` and
+`DATABASE_URL` at a path that already is.
 
 With PostgreSQL, MySQL or MariaDB the database is external and only the artifacts are on the
 volume:
