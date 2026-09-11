@@ -7,12 +7,23 @@ import { createIdentityRepository, createIdentityService } from './modules/ident
 import { createAuthRepository, createAuthService } from './modules/auth/index.js';
 import { createProductRepository, createProductService } from './modules/product/index.js';
 import { createDiskStorage } from './storage/index.js';
+import { ensureWritableDirectory, writableDirectories } from './lib/writable.js';
 import { createFleetRepository, createFleetService } from './modules/fleet/index.js';
 import { createAuditService } from './modules/audit/index.js';
 import { createSourceService } from './modules/source/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
+
+/*
+ * Before the first connection, not after it. A directory the service cannot
+ * write to surfaces as whatever the driver happens to say -- `SQLITE_CANTOPEN`
+ * names neither the path nor the reason -- and the reason is almost always that
+ * this process is unprivileged and the directory is not its to write.
+ */
+for (const [directory, what] of writableDirectories(config)) {
+  ensureWritableDirectory(directory, what);
+}
 
 const database = await createDatabase(config);
 

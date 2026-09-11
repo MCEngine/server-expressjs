@@ -56,9 +56,16 @@ RUN npm ci --omit=dev --ignore-scripts \
 FROM node:${NODE_VERSION} AS runtime
 WORKDIR /app
 
+# Every writable default points **into the volume below**, and that is the whole
+# rule: /app is created by WORKDIR as root and this image runs unprivileged, so
+# a default landing there cannot be written. DATABASE_URL is here for exactly
+# that reason -- src/config.ts defaults it to a relative `file:./dev.sqlite`,
+# which is right for `npm run dev` and fatal in a container.
+# test/image.test.ts asserts this file and the VOLUME line agree.
 ENV NODE_ENV=production \
     PORT=3000 \
-    STORAGE_DIR=/data/storage
+    STORAGE_DIR=/data/storage \
+    DATABASE_URL=file:/data/app.sqlite
 
 # The official Node images already carry an unprivileged `node` user at uid
 # 1000. Nothing is installed at runtime, so root buys nothing past this point.

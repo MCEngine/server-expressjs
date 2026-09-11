@@ -85,6 +85,13 @@ one that asks.
 
 ## Fixed
 
+- **The image crash-looped on boot with `SQLITE_CANTOPEN`.** `DATABASE_URL` was left at the
+  source default `file:./dev.sqlite` — relative, so it resolved against `/app`, which Docker
+  creates as root while the image runs unprivileged. The runtime stage now defaults it to
+  `file:/data/app.sqlite`, beside `STORAGE_DIR` on the declared volume, and startup checks every
+  directory it must write to before opening anything — failing with the path and the likely
+  cause instead of a driver error that names neither.
+
 - **`src/storage/index.ts` was never committed, so the repository did not typecheck from a clean
   clone.** A `.gitignore` pattern written for the directory the disk driver writes into —
   `storage/`, with no leading slash — matches at every depth, and silently also matched the
