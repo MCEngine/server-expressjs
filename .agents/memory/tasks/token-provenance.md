@@ -36,3 +36,8 @@ now, with the token id in the metadata, so they appear in the trail its admins c
 
 Three cases, and the audit one was mutated to check it could fail: filing the event back against
 the token makes it fail, which is the defect this task was about.
+
+### Task 4 — chore/token-provenance-release
+
+The changelog entry and the state file. `0.0.0` did not move. The panel's task 5 reads
+`created_by` and merges after this.

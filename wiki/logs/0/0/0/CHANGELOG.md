@@ -150,4 +150,11 @@ one that asks.
 - `GET /me/orgs` — the organizations the caller belongs to, with the role held. The repository
   query existed already and no route exposed it, which is why an organization was reachable only
   by knowing its handle.
+- **A token says who minted it.** Every token payload now carries `created_by` — id, handle and
+  display name — and an organization's `token.created` and `token.revoked` events are filed
+  against the organization, so `GET /orgs/:handle/audit` shows them. The column existed and was
+  never selected, and the events were filed against the token while that route reads
+  `subject_type = 'org'`: the provenance of an org-owned credential was recorded and reached
+  nobody. It matters for exactly those tokens, because the token acts as the organization and the
+  row is the only thing that still says which admin made it.
 
