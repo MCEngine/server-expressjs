@@ -96,6 +96,9 @@ before the first connection. See
 [`../decisions/native-module-install.md`](../decisions/native-module-install.md) and
 [`../decisions/writable-paths.md`](../decisions/writable-paths.md).
 
+**News exists**, at `/news`, with Markdown bodies the service never renders. Writing is gated by
+`NEWS_AUTHORS` — empty by default, because there is no staff role to gate it with instead.
+
 **A token names its creator**, in the payload and in the organization's audit trail — an
 org-owned token acts as the organization, so that row is the only record of which admin minted
 it.
