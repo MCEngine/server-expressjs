@@ -31,20 +31,28 @@ there once, and this page links rather than repeats them.
 | `src/http/` | The request id middleware and the error handler. |
 | `src/routes/health.ts` | Liveness and readiness. |
 | `src/lib/logger.ts` | JSON-line logger over `console`, no dependency. |
+| `src/lib/ids.ts` | ULID generation, and the base64url secret used for tokens. |
+| `src/lib/version.ts` | `normalizeVersion` and `compareVersions` — why `1.10.0` beats `1.9.0`. |
+| `src/db/schema.ts` | The typed shape of every table. **Hand-written**; nothing generates it. |
+| `src/db/types.ts` | The four dialects' column types, and which support a partial index. |
+| `src/db/dialect.ts` | Builds the Kysely instance. Each driver is imported inside its branch. |
+| `src/db/plugins.ts` | Normalizes driver results; rewrites booleans for SQLite. |
+| `src/db/migrator.ts` | The migration list, as a literal. |
+| `src/db/migrations/` | One file per migration. Never edited after shipping. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There is no database and there are no domain routes.** No schema, no migrations, no ORM, no
-accounts, no products, no fleet. `/health` and `/health/ready` are the only routes that
-exist, and `createHealthRouter` is passed an empty list of probes because there is nothing
-yet to probe.
+**There are no domain routes.** The schema exists and every constraint in it is tested, but
+nothing above it does: no accounts, no orgs, no tokens, no products, no uploads, no fleet.
+`/health` and `/health/ready` are still the only routes.
 
-No Dockerfile and no CI workflow either; neither has been asked for.
+No storage driver either — `product_files.storage_key` is specified but nothing writes bytes
+yet. No Dockerfile and no CI workflow; neither has been asked for.
 
-That is not an oversight. The runtime is one task of a twenty-task plan and the persistence
-layer is the next one. The plan table lives in `MCEngine/plugin-manager` at
+That is not an oversight. The persistence layer is one task of a twenty-task plan and the
+identity module is the next one. The plan table lives in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`, and this repository's own entries are in
 [`../../memory/tasks/mcpluginmanager-platform.md`](../../memory/tasks/mcpluginmanager-platform.md).
 
@@ -88,3 +96,14 @@ Never an `INDEX.md`. Never a third documentation tree. The authority is
   request-time surprise.
 * **A test never mutates `process.env`.** `test/helpers.ts` builds a config from a literal;
   the environment is shared state and it leaks between suite files.
+* **`src/db/schema.ts` is hand-written and nothing keeps it in step with the migrations.**
+  That is the cost of not using a code generator. `test/db-constraints.test.ts` is what
+  catches the drift, and only where it looks.
+* **SQLite needs two plugins and the other providers need one.** Its driver refuses to bind
+  a boolean and it has no boolean type, so booleans are rewritten to integers going in and
+  back on the way out.
+* **`PRAGMA foreign_keys` is off by default in SQLite.** `dialect.ts` turns it on. Without
+  it every foreign key in the schema is silently decorative, and the constraint suite would
+  pass against a database enforcing nothing.
+* **The test database is a real file, not `:memory:`.** WAL and foreign-key enforcement are
+  what production uses, and an in-memory database differs on both.

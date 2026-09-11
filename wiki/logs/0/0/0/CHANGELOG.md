@@ -29,6 +29,13 @@ release, and is appended to as each task lands.
 - `src/lib/logger.ts` — a JSON-line logger with no dependency.
 - `src/routes/health.ts` — liveness that checks nothing and readiness that checks everything.
 - `wiki/environments/setup.md` and `wiki/environments/env.md`.
+- `src/db/` — the typed schema for all twenty-one tables, the four dialects' differences in
+  one table, the connection factory with per-provider lazy driver imports, the migration
+  runner, and the initial migration.
+- `src/lib/ids.ts` — ULIDs, so identifiers sort by time and cannot be enumerated.
+- `src/lib/version.ts` — `normalizeVersion` and `compareVersions`, so `1.10.0` is newer than
+  `1.9.0` rather than older.
+- Sixteen constraint tests, one per rule the data model says the schema carries itself.
 
 ## Changed
 

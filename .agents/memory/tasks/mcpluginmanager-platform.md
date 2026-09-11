@@ -151,3 +151,54 @@ build commands in place of the "none yet" note.
 
 Next task depends on: `createApp`'s options shape, which the persistence layer extends with a
 readiness probe rather than a module-level connection.
+
+### Task 8 — feat/database
+
+The schema, the migration that creates it, the connection factory, and a test harness that
+builds a real database per suite.
+
+**Kysely instead of Prisma, which the plan named.** The full reasoning is in
+`../decisions/query-builder-over-orm.md`; the short version is that the data model approved
+one task earlier puts nine rules in the database, three of them partial unique indexes and
+three of them `CHECK` constraints, and Prisma's schema language can express neither. The
+choice was between weakening the data model and carrying a code generator that the raw SQL
+migrations would make redundant anyway. **This reverses a decision the user made, so it is
+reported in the work summary rather than left in a diff.**
+
+**Sixteen constraint tests, one per row of the data model's *What the schema enforces on its
+own* table.** They are the point of the task: each one performs a direct insert that violates
+a rule and asserts the database refuses it. If any passed, the documentation's claim that the
+schema carries the rule would be false and the rule would live only in handler code. Two of
+them assert the *permitted* case as well — the same plugin id on two different servers, and a
+second `is_latest` in a different channel — because a constraint that is too strict fails
+silently in the opposite direction.
+
+**One test asserts the bug that `version_norm` exists to prevent**, by first asserting that
+`'1.9.0' > '1.10.0'` is true as raw text. Without that line the padding looks like decoration.
+
+**Three dialect differences could not be papered over** and are collected in `src/db/types.ts`
+rather than scattered: a timestamp's storage type, whether the engine has a native boolean,
+and whether it supports a partial unique index. MySQL and MariaDB have no partial index, so
+the three conditional-unique rules are given a stored generated column that is NULL unless the
+condition holds — their unique indexes ignore NULLs, which is the same guarantee by another
+mechanism.
+
+**Two things about SQLite that would each have made the suite lie.** `PRAGMA foreign_keys` is
+off by default, so without turning it on every foreign key in the schema is decorative and the
+constraint suite would pass against a database enforcing nothing. And its driver refuses to
+bind a JavaScript boolean, which surfaced as a driver-level throw on the first run — hence
+`SqliteBooleanPlugin`, applied to SQLite alone because `pg` and `mysql2` take a boolean
+directly and converting for them would write `1` into a real boolean column.
+
+The test database is a real file in a temporary directory rather than `:memory:`, because WAL
+and foreign-key enforcement are what production uses and an in-memory database differs on both.
+
+Migrations run at startup, from a literal list rather than a directory scan: the set that
+ships is the set that was compiled, and `dist/` has no directory to read.
+
+Verified: `npm run check` green — 67 tests across eight suites. Built and run for real: the
+first boot logged `migrations applied: 001-initial`, the second applied none, `/health/ready`
+reported the database reachable, and 23 tables existed on disk.
+
+Next task depends on: `src/db/schema.ts` and the ULID helper. Every module from here reads
+and writes through them.

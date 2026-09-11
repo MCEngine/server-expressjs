@@ -25,3 +25,9 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | File | Purpose |
 |---|---|
 | [`tasks/mcpluginmanager-platform.md`](../memory/tasks/mcpluginmanager-platform.md) | This repository's entries in the MCPluginManager platform plan. The plan table itself lives in `MCEngine/plugin-manager`. |
+
+## Decisions
+
+| File | Purpose |
+|---|---|
+| [`decisions/query-builder-over-orm.md`](../memory/decisions/query-builder-over-orm.md) | Why the persistence layer uses Kysely and hand-written migrations instead of Prisma, which the plan named. |

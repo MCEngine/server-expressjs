@@ -22,9 +22,14 @@ Plus the runtime: `package.json` (`@mcengine/server-expressjs` at `0.0.0`), `tsc
 and `tsconfig.build.json`, `vitest.config.ts`, `.gitignore`, `.env.example`,
 `package-lock.json`, `src/` and `test/`, and `wiki/environments/{setup,env}.md`.
 
-**Does not exist:** the database. No schema, no migrations, no ORM, and no domain routes —
-no accounts, no products, no fleet. `/health` and `/health/ready` are the only routes.
-No Dockerfile and no CI workflow; neither was asked for.
+Plus the persistence layer: `src/db/` (typed schema, dialect table, connection factory, two
+Kysely plugins, the migration runner and the initial migration), `src/lib/ids.ts` and
+`src/lib/version.ts`.
+
+**Does not exist:** every domain route. No accounts, no orgs, no tokens, no products, no
+uploads, no fleet — the schema is there and tested, but nothing above it is. No storage
+driver: `storage_key` is specified and nothing writes bytes yet. No Dockerfile and no CI
+workflow; neither was asked for.
 
 ## Stack
 
@@ -34,20 +39,25 @@ Vitest with Supertest. Two runtime dependencies only — Express and Zod. The lo
 lines over `console` rather than a dependency, because this service needs neither transports
 nor redaction yet, and it is one file to replace when it does.
 
-**Decided, not yet installed:** Prisma over SQLite for tests and PostgreSQL, MySQL and
-MariaDB in production. MongoDB is deferred to a separate adapter behind the same repository
-interfaces, because it needs its own Prisma schema and supports no migrations.
+**Persistence: Kysely, not Prisma.** Hand-written migrations over SQLite, PostgreSQL, MySQL
+and MariaDB, with `better-sqlite3`, `pg` and `mysql2` each imported only inside its own
+branch. This reverses what the plan named, because Prisma cannot express the partial unique
+indexes and `CHECK` constraints the approved data model puts in the database — see
+[`../decisions/query-builder-over-orm.md`](../decisions/query-builder-over-orm.md). MongoDB
+stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
+either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 18 tests passing across four
-suites. `npm run build` compiles, and the compiled entry point serves `/health`,
-`/health/ready` and the 404 envelope, sets `X-Request-Id`, omits `X-Powered-By`, and exits
-cleanly on SIGTERM.
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 67 tests passing across eight
+suites, including one case per rule in the data model's *What the schema enforces on its own*
+table. `npm run build` compiles; the compiled entry point applies migrations on first boot,
+applies none on the second, reports the database in `/health/ready`, and exits cleanly on
+SIGTERM.
 
 ## Next step
 
-The persistence layer: repository interfaces, the Prisma schema for the four SQL engines,
-migrations, and a SQLite harness the suite can build and tear down per run. It is checked
-against `wiki/information/data-model.md`, which is already written.
+The identity module: accounts, profiles and the handle cooldown, emails, org membership and
+roles, org settings. Repository functions over `src/db/`, routes as specified in
+`wiki/information/api-contract.md`.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.
