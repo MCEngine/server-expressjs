@@ -17,6 +17,8 @@ export interface SessionRecord {
 export interface ApiTokenRecord {
   id: string;
   owner_account_id: string;
+  /** The account that minted it — the only record of that once it is issued. */
+  created_by: string;
   name: string;
   token_prefix: string;
   token_hash: string;
@@ -94,6 +96,7 @@ const SESSION_COLUMNS = [
 const TOKEN_COLUMNS = [
   'id',
   'owner_account_id',
+  'created_by',
   'name',
   'token_prefix',
   'token_hash',

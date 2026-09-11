@@ -156,3 +156,92 @@ describe("an organization's tokens", () => {
     expect((await mintOrgToken(mallory)).status).toBe(404);
   });
 });
+
+describe('who minted an organization token', () => {
+  let s: Stack;
+  let alice: string;
+
+  const registerAs = async (handle: string) => {
+    const res = await request(s.app).post('/api/v1/auth/register').send({
+      handle,
+      displayName: handle,
+      email: `${handle}@example.com`,
+      password: PASSWORD,
+    });
+    expect(res.status).toBe(201);
+    return res.body.access_token as string;
+  };
+
+  beforeEach(async () => {
+    s = await buildStack();
+    alice = await registerAs('alice');
+    await request(s.app)
+      .post('/api/v1/orgs')
+      .set('Authorization', `Bearer ${alice}`)
+      .send({ handle: 'acme', displayName: 'Acme' })
+      .expect(201);
+  });
+
+  afterEach(async () => {
+    await s.destroy();
+  });
+
+  it('is on the token, so a later admin can see whose it was', async () => {
+    // Bob mints it, not the owner: the interesting case is the token that
+    // outlives the person, which is the whole point of an org-owned one.
+    const bob = await registerAs('bob');
+    await request(s.app)
+      .post('/api/v1/orgs/acme/members')
+      .set('Authorization', `Bearer ${alice}`)
+      .send({ handle: 'bob', role: 'admin' })
+      .expect(204);
+
+    const created = await request(s.app)
+      .post('/api/v1/orgs/acme/tokens')
+      .set('Authorization', `Bearer ${bob}`)
+      .send({ name: 'ci', scopes: ['artifact:write'] })
+      .expect(201);
+    expect(created.body.created_by).toMatchObject({ handle: 'bob', display_name: 'bob' });
+
+    const listed = await request(s.app)
+      .get('/api/v1/orgs/acme/tokens')
+      .set('Authorization', `Bearer ${alice}`);
+    expect(listed.body.data[0].created_by).toMatchObject({ handle: 'bob' });
+    // Still never the secret.
+    expect(listed.body.data[0]).not.toHaveProperty('token');
+  });
+
+  it("is in the organization's own audit trail", async () => {
+    const created = await request(s.app)
+      .post('/api/v1/orgs/acme/tokens')
+      .set('Authorization', `Bearer ${alice}`)
+      .send({ name: 'ci', scopes: ['artifact:write'] })
+      .expect(201);
+
+    await request(s.app)
+      .delete(`/api/v1/orgs/acme/tokens/${created.body.id}`)
+      .set('Authorization', `Bearer ${alice}`)
+      .expect(204);
+
+    const audit = await request(s.app)
+      .get('/api/v1/orgs/acme/audit')
+      .set('Authorization', `Bearer ${alice}`);
+
+    // Filed against the org rather than the token: an event on the token lands
+    // in the table and in nobody's trail.
+    const actions = audit.body.data.map((e: { action: string }) => e.action);
+    expect(actions).toContain('token.created');
+    expect(actions).toContain('token.revoked');
+    const minted = audit.body.data.find((e: { action: string }) => e.action === 'token.created');
+    expect(minted.metadata).toMatchObject({ token: created.body.id, name: 'ci' });
+  });
+
+  it('names the caller on a personal token too', async () => {
+    const own = await request(s.app)
+      .post('/api/v1/tokens')
+      .set('Authorization', `Bearer ${alice}`)
+      .send({ name: 'mine', scopes: ['artifact:read'] })
+      .expect(201);
+    expect(own.body.created_by).toMatchObject({ handle: 'alice' });
+  });
+});
