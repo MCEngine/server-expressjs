@@ -76,3 +76,33 @@ organizations and products are administered the same way rather than two ways.
 ### Task 1 — chore/org-management-plan
 
 This record and its row in `.agents/index/memory-index.md`. Nothing else.
+
+### Task 2 — fix/token-owner
+
+`src/modules/identity/authorize.ts` is new and holds `assertMayAdminister`, lifted out of
+`createIdentityRouter` so the token route asks the same question rather than a second version of
+it. `POST /tokens` now authorizes `ownerAccountId` through it, and fails closed when no identity
+service is wired.
+
+`test/token-owner.test.ts` was run against the previous code before being kept: three of its five
+cases failed there, including minting a token owned by an account whose id was read from the
+public `GET /accounts/:handle`. The contract now states the rule next to the route.
+
+### Task 3 — feat/org-tokens
+
+`GET|POST|DELETE /orgs/:handle/tokens`, all `admin`+, in the auth router because it owns tokens.
+`requireRole` gained one branch: an organization acting for itself is `owner`. That is what makes
+an org-owned token work at all — an org has never had a membership row for itself — and it grants
+nothing on the governance routes, because `requireSession` refuses an API token outright with
+`session_required`.
+
+Five cases, and two of them are the ones that matter: an org token publishes to its own org's
+product, and is `404` on another org's. A third asserts the token cannot rename the org or mint
+another token.
+
+The first version of that branch was `if (orgId === userId) return 'owner'`, and `product.test.ts`
+caught it: `requireRole` is also called with an account that turns out to be a **user** — creating
+a product under your own handle — and answering `owner` there let the caller past a check meant to
+stop them, turning a `404` into a `400`. The branch now confirms the account is an organization
+first. The reasoning that missed it was "a session actor's account id can never equal an org's",
+which is true and was not the case that broke.

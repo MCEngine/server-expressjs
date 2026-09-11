@@ -7,6 +7,7 @@ import { pathParam } from '../../http/params.js';
 import { SCOPES } from './tokens.js';
 import { assertMayAdminister } from '../identity/authorize.js';
 import type { IdentityService } from '../identity/service.js';
+import type { AccountRecord } from '../identity/repository.js';
 import type { ApiTokenRecord } from './repository.js';
 import type { AuthService, DeviceContext, IssuedSession } from './service.js';
 import type { AuditService } from '../audit/index.js';
@@ -195,6 +196,77 @@ export function createAuthRouter(
     });
 
     res.status(201).json({ ...publicToken(record), token });
+  });
+
+  /*
+   * An organization's tokens.
+   *
+   * Separate from `/tokens`, which lists the caller's own: a token owned by an
+   * org belongs to the org, so it is listed, minted and revoked where the org is
+   * administered rather than in a personal list nobody else can see. Every one
+   * of these needs `admin`, because a token is a credential for everything the
+   * org can do.
+   */
+  const administeredOrg = async (req: Request): Promise<AccountRecord> => {
+    // Narrowed here rather than asserted below: with no identity service wired
+    // there is nothing that could answer "may I", and the safe answer is no.
+    if (identity === undefined) {
+      throw errors.notFound('account_not_found', 'No such organization.');
+    }
+    const account = await identity.getByHandle(pathParam(req, 'handle'));
+    if (account.type !== 'org') {
+      throw errors.notFound('account_not_found', 'No such organization.');
+    }
+    await assertMayAdminister(identity, account, actorOf(req).accountId);
+    return account;
+  };
+
+  router.get('/orgs/:handle/tokens', requireSession, async (req, res) => {
+    const org = await administeredOrg(req);
+    const tokens = await auth.listApiTokens(org.id);
+    res.json({ data: tokens.map(publicToken) });
+  });
+
+  router.post('/orgs/:handle/tokens', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await administeredOrg(req);
+    const body = createTokenSchema.parse(req.body);
+
+    const { token, record } = await auth.createApiToken({
+      ownerAccountId: org.id,
+      createdBy: actor.accountId,
+      name: body.name,
+      scopes: body.scopes,
+      expiresInDays: body.expiresInDays ?? null,
+    });
+
+    await audit.record({
+      actor,
+      subjectType: 'token',
+      subjectId: record.id,
+      action: 'token.created',
+      metadata: { name: record.name, scopes: body.scopes, org: org.handle },
+      ip: req.ip,
+    });
+
+    res.status(201).json({ ...publicToken(record), token });
+  });
+
+  router.delete('/orgs/:handle/tokens/:id', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const org = await administeredOrg(req);
+    const tokenId = pathParam(req, 'id');
+
+    await auth.revokeApiToken(org.id, tokenId);
+    await audit.record({
+      actor,
+      subjectType: 'token',
+      subjectId: tokenId,
+      action: 'token.revoked',
+      metadata: { org: org.handle },
+      ip: req.ip,
+    });
+    res.status(204).end();
   });
 
   router.delete('/tokens/:id', requireSession, async (req, res) => {
