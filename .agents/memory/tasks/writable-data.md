@@ -42,9 +42,9 @@ Recorded in [`../decisions/writable-paths.md`](../decisions/writable-paths.md).
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/writable-data-plan` | `.agents/memory/`, `.agents/index/` | |
-| 2 | Default the database onto the volume | The env, the preflight, the guard, the docs | `server-expressjs` | `fix/writable-data-dir` | `Dockerfile`, `src/lib/`, `src/index.ts`, `test/`, `wiki/environments/` | |
-| 3 | Release | Logs, this table, the record closed | `server-expressjs` | `chore/writable-data-release` | `wiki/logs/0/0/0/`, `.agents/` | |
+| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/writable-data-plan` | `.agents/memory/`, `.agents/index/` | MCEngine/server-expressjs#24 |
+| 2 | Default the database onto the volume | The env, the preflight, the guard, the docs | `server-expressjs` | `fix/writable-data-dir` | `Dockerfile`, `src/lib/`, `src/index.ts`, `test/`, `wiki/environments/` | MCEngine/server-expressjs#25 |
+| 3 | Release | Logs, this table, the record closed | `server-expressjs` | `chore/writable-data-release` | `wiki/logs/0/0/0/`, `.agents/` | MCEngine/server-expressjs#26 |
 
 ## Entries
 
@@ -110,3 +110,23 @@ That last row is the one that matters. Every boot check in the previous two task
 
 Next task depends on: nothing. The release closes the record.
 
+### Task 3 — chore/writable-data-release
+
+Filled the `PR` column, wrote this entry, and brought `repository-state.md` current.
+
+**The version did not move.**
+
+**The rule that came out of this is narrower and more useful than the last one.** After the
+untracked file, the repository state said: *name what the target environment has that this one
+does not, and check there.* It was right and it was not enough — here the target did not have
+something, it **had fewer things**: no `DATABASE_URL`, because every command written by hand
+supplies one.
+
+So the rule gains a second half: **run the defaults.** A check that configures the thing it is
+checking has tested the configuration, not the artifact.
+
+Next task depends on: nothing. This closes the record.
+
+## Status
+
+**Done.** All three tasks landed; the table above carries the pull request each merged through.

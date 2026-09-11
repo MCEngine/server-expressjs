@@ -70,15 +70,25 @@ No CI workflow.
 
 ## Verifying anything here
 
-**Name what the target environment has that this one does not, and check there.** Two
-consecutive tasks shipped broken because a check passed locally for a reason that did not exist
-where the code would run: the development machine had a C compiler the image lacked, and then a
-file the repository lacked. Both checks were honest about what they ran and silent about where.
+Two rules, both paid for.
 
-`npm run check` now fails if anything under `src/` is git-ignored, which closes the second case.
-The first has no test — only the habit. See
-[`../decisions/gitignore-anchoring.md`](../decisions/gitignore-anchoring.md) and
-[`../decisions/native-module-install.md`](../decisions/native-module-install.md).
+**1. Name what the target environment has that this one does not, and check there.** The
+development machine had a C compiler the image lacked, then a file the repository lacked. Both
+checks were honest about what they ran and silent about where.
+
+**2. Run the defaults.** The third failure was the opposite shape: the target had *fewer* things,
+not more. Every boot check written by hand exported `DATABASE_URL`, so none of them ever
+exercised the value the image actually ships with — which pointed at a directory the runtime
+user cannot write. A check that configures the thing it is checking has tested the
+configuration, not the artifact.
+
+Three guards now run inside `npm run check`, none needing a daemon: nothing under `src/` may be
+git-ignored; every path the image's runtime stage defaults to must be absolute and under its
+declared `VOLUME`; and every directory the configuration requires is checked for writability
+before the first connection. See
+[`../decisions/gitignore-anchoring.md`](../decisions/gitignore-anchoring.md),
+[`../decisions/native-module-install.md`](../decisions/native-module-install.md) and
+[`../decisions/writable-paths.md`](../decisions/writable-paths.md).
 
 ## Stack
 
@@ -96,7 +106,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 254 tests passing across sixteen
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 260 tests passing across eighteen
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -104,14 +114,15 @@ SIGTERM.
 
 ## Next step
 
-**Five plans are finished and all five records are closed.** The twenty-task platform plan
+**Six plans are finished and all six records are closed.** The twenty-task platform plan
 (`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
 to `PUT /api/v1/products/:id/versions/:version`, the container-image plan
 (`../tasks/container-image.md`, also here), `../tasks/native-module-build.md`, which fixed
-the image build that plan shipped broken, and `../tasks/untracked-source.md`, which committed a
-source file an ignore pattern had kept out of the repository. Follow-up work opens a new record
-rather than appending to any of them.
+the image build that plan shipped broken, `../tasks/untracked-source.md`, which committed a
+source file an ignore pattern had kept out of the repository, and `../tasks/writable-data.md`,
+which stopped the image defaulting its database onto a read-only path. Follow-up work opens a
+new record rather than appending to any of them.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies
 and nothing enforces; artifact signing, which is the difference between "these bytes survived
