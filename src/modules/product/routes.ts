@@ -243,8 +243,18 @@ export function createProductRouter(
   /**
    * Publishing a version. The panel sends a session; CI sends a token with
    * `artifact:write`. The two paths differ only in `upload_source`.
+   *
+   * **`PUT`, addressed by `:version`.** `products.id` is globally unique, so
+   * `(product_id, version)` fully addresses a version — which is how the three
+   * routes that read, download and delete one already address it. `PUT` is the
+   * method for creating a resource at a URI the client chose, and the client
+   * chooses the version.
+   *
+   * It is create-only rather than a replace: a published version is immutable,
+   * because the checksum in its payload is what every Minecraft server verifies
+   * its download against, so re-publishing one is `409` as it always was.
    */
-  router.post('/products/:id/versions', requireScope('artifact:write'), async (req, res) => {
+  router.put('/products/:id/versions/:version', requireScope('artifact:write'), async (req, res) => {
     const actor = actorOf(req);
     const product = await visibleProduct(pathParam(req, 'id'), actor.accountId);
     await assertRole(product, actor.accountId, 'maintainer');
@@ -252,8 +262,21 @@ export function createProductRouter(
     const settings = await identity.orgSettings(product.owner_org_id);
     const { fields, file } = await readMultipart(req, settings.max_file_bytes);
 
+    /*
+     * The path is the only source of the version, and a body that also carries
+     * one is refused even when the two agree. Ignoring it silently is the worse
+     * failure: a script whose URL says 1.2.2 while its body says 1.2.3 would
+     * publish 1.2.2 and report success, and nothing downstream would flag it.
+     */
+    if (fields['version'] !== undefined) {
+      throw errors.badRequest(
+        'version_in_body',
+        'The version belongs in the path, not the body. Publish to /products/:id/versions/:version.',
+      );
+    }
+
     const body = publishVersionSchema.parse({
-      version: fields['version'],
+      version: pathParam(req, 'version'),
       channel: fields['channel'],
       changelog: fields['changelog'],
       compatibility: compatibilitySchema.optional().parse(jsonField(fields, 'compatibility')),

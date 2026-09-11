@@ -53,9 +53,8 @@ describe('fleet', () => {
 
     for (const version of ['2.19.0', '2.20.1']) {
       await request(s.app)
-        .post(`/api/v1/products/${productId}/versions`)
+        .put(`/api/v1/products/${productId}/versions/${version}`)
         .set('Authorization', `Bearer ${access}`)
-        .field('version', version)
         .attach('file', bukkitJar('Essentials', version), `Essentials-${version}.jar`);
     }
 

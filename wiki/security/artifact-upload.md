@@ -8,7 +8,7 @@ becomes part of a filesystem path, and nothing is decompressed to find out how b
 
 ## In this project
 
-The upload path is `POST /api/v1/products/:id/versions`, in
+The upload path is `PUT /api/v1/products/:id/versions/:version`, in
 [`src/modules/product/routes.ts`](../../src/modules/product/routes.ts). It reaches:
 
 - [`src/http/multipart.ts`](../../src/http/multipart.ts) — reads the body, capping the file
