@@ -7,7 +7,7 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
-## As of the agent instruction system landing
+## As of the 0.0.0 pre-release
 
 `MCEngine/server-expressjs` is a **Mode B consumer** of the shared instruction set served by
 the `lxagents-agents-base` connector. It declares no overrides.
@@ -78,10 +78,14 @@ SIGTERM.
 
 ## Next step
 
-Nothing in this repository until the release task, which fills the plan's `PR` column and
-closes the record. The remaining work is in `MCEngine/client-reactjs` and
-`MCEngine/plugin-manager`, both of which build against the contract this repository now
-implements.
+**The twenty-task plan is finished and its record is closed.** Follow-up work opens a new
+record rather than appending to `../tasks/mcpluginmanager-platform.md`, which stays as the
+account of how this repository got here. The plan table itself is in
+`MCEngine/plugin-manager` at `.agents/memory/tasks/mcpluginmanager-platform.md`.
 
-The full ordered plan is in `MCEngine/plugin-manager` at
-`.agents/memory/tasks/mcpluginmanager-platform.md`.
+The candidates, in the order they matter: rate limiting, which the contract already specifies
+and nothing enforces; artifact signing, which is the difference between "these bytes survived
+the wire" and "this org published them" and needs `MCEngine/plugin-manager` to carry the
+public key; an OAuth provider redirect, since linking and signing in already work beneath it;
+and a Dockerfile with a CI workflow. A first shipping version is a version claim and
+therefore asks first.

@@ -465,3 +465,30 @@ Verified: `npm run check` green, 249 tests across fifteen suites, 36 of them new
 
 Next task depends on: nothing in this repository. This is the last server task before the
 release.
+
+### Task 20 — chore/release
+
+The release, run in all three repositories at once. Here it wrote three things: this entry,
+the release header on `wiki/logs/0/0/0/CHANGELOG.md`, and `repository-state.md` brought
+current. The plan table it fills the `PR` column of lives in `MCEngine/plugin-manager`, and
+so does the account of what the twenty tasks add up to.
+
+**The version did not move.** `@mcengine/server-expressjs` stays at `0.0.0`, and
+`wiki/logs/0/0/0/` already existed, so this appends rather than making a version claim.
+
+**One decision approved before the work started was reversed during it, and this is the
+repository it was reversed in.** The plan named Prisma; task 8 used Kysely, because the data
+model approved in task 6 puts nine rules in the database and Prisma's schema language can
+express neither its three partial unique indexes nor its three `CHECK` constraints. See
+[`../decisions/query-builder-over-orm.md`](../decisions/query-builder-over-orm.md). It is
+reported in the work summary rather than left to be discovered in a diff.
+
+**What is open, named so it is not mistaken for done.** No rate limiting, though the contract
+specifies the limits. No artifact signing — a download carries a checksum this service
+declared, which proves the bytes survived the wire and not who published them. No redirect
+re-validation and no DNS-pinning agent on the external fetch path. No OAuth provider redirect,
+though linking and signing in with an identity work and are tested. No Dockerfile and no CI
+workflow. The first four are in the two `wiki/security/` pages under `Open`, with what each
+would take.
+
+Next task depends on: nothing. This is the last task in this repository's stack.

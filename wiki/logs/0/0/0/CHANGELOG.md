@@ -1,7 +1,12 @@
 # Changelog — 0.0.0
 
+**2026-09-11** — the central server behind MCPluginManager: accounts and organizations over
+one handle namespace, scoped tokens, a product catalogue that validates every jar it accepts,
+a fleet control plane, two audit trails, and an external source resolver.
+
 Pre-release. This version covers the repository from its initial commit up to the first
-release, and is appended to as each task lands.
+release. Nothing has shipped; `0.0.0` has not moved and the first version that ships is the
+one that asks.
 
 ## Added
 
