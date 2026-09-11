@@ -6,7 +6,9 @@ import {
   handleSchema,
   orgRoleSchema,
   updateProfileSchema,
+  type OrgRole,
 } from './validation.js';
+import { assertMayAdminister as mayAdminister } from './authorize.js';
 import { errors } from '../../errors.js';
 import { pathParam } from '../../http/params.js';
 import { requireSession, actorOf } from '../auth/middleware.js';
@@ -65,17 +67,13 @@ export function createIdentityRouter(identity: IdentityService, audit: AuditServ
    * required role, which `requireRole` answers with 404 for a non-member so an
    * org is not discoverable by probing.
    */
-  const assertMayAdminister = async (
+  // The rule itself lives in `authorize.ts`, because the token routes ask the
+  // same question and asking it twice is how the two answers drift apart.
+  const assertMayAdminister = (
     account: AccountRecord,
     callerId: string,
-    role: 'admin' | 'maintainer' | 'member' = 'admin',
-  ): Promise<void> => {
-    if (account.type === 'user') {
-      if (account.id !== callerId) throw errors.notFound('account_not_found', 'No such account.');
-      return;
-    }
-    await identity.requireRole(account.id, callerId, role);
-  };
+    role: OrgRole = 'admin',
+  ): Promise<void> => mayAdminister(identity, account, callerId, role);
 
   router.get('/accounts/:handle', async (req, res) => {
     res.json(publicAccount(await accountFrom(pathParam(req, 'handle'))));

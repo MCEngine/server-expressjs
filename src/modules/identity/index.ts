@@ -2,4 +2,5 @@ export { createIdentityRepository, type IdentityRepository } from './repository.
 export type { AccountRecord, EmailRecord, MemberRecord, OrgSettingsRecord } from './repository.js';
 export { createIdentityService, TIER_LIMITS, type IdentityService } from './service.js';
 export { createIdentityRouter, publicAccount } from './routes.js';
+export { assertMayAdminister } from './authorize.js';
 export * from './validation.js';
