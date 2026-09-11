@@ -18,6 +18,17 @@ release, and is appended to as each task lands.
 - `wiki/information/api-contract.md` — every route, the three authentication schemes, the
   error envelope, the nine ordered checks an upload must pass, and the single payload the
   plugin polls for.
+- The Express runtime: `package.json` at `0.0.0`, strict TypeScript, Vitest with Supertest,
+  and two runtime dependencies — Express and Zod.
+- `src/config.ts` — every environment variable, validated once at startup, frozen, and taken
+  as an argument so a test never mutates `process.env`.
+- `src/errors.ts` and `src/http/errorHandler.ts` — the one error envelope the contract
+  promises, with a deliberate `ApiError` rendered in full and anything else reduced to a bare
+  `internal_error`.
+- `src/http/requestContext.ts` — a request id per request, honouring a sanitized inbound one.
+- `src/lib/logger.ts` — a JSON-line logger with no dependency.
+- `src/routes/health.ts` — liveness that checks nothing and readiness that checks everything.
+- `wiki/environments/setup.md` and `wiki/environments/env.md`.
 
 ## Changed
 

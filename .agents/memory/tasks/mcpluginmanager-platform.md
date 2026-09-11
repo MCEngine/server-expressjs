@@ -99,3 +99,55 @@ threat model is written in the task that makes the guards real.
 
 Next task depends on: both documents. The Express skeleton, the persistence layer and every
 module after them are checked against these rather than inventing their own shapes.
+
+### Task 7 — build/express-skeleton
+
+The runtime, with no domain in it: configuration, the error envelope, the request id, a
+logger, health routes, and the test harness the rest of the service is built against.
+
+**Two runtime dependencies, Express and Zod.** The logger is fifty lines over `console`
+rather than pino: this service needs neither transports nor redaction yet, every call site
+already passes structured fields rather than interpolating, and it is one file to replace
+when that changes. Adding a dependency is easy later; removing one is not.
+
+**`createApp()` takes its dependencies as arguments and never binds a port.** Listening is
+`src/index.ts` alone. That is what lets `test/health.test.ts` assert the case that actually
+matters — readiness returning 503 and naming the failing dependency — which a real database
+makes hard to arrange and a module-level singleton makes impossible.
+
+**The environment is parsed once, in `src/config.ts`, and nothing else reads `process.env`.**
+`loadConfig` takes the environment as an argument so a test can build a config without
+mutating the global, which is shared state that leaks between suite files. The result is
+frozen. `JWT_SECRET` has no default and a 32-character minimum: a service that boots with a
+well-known signing key is worse than one that refuses to boot.
+
+**`DATABASE_PROVIDER` is a separate key from `DATABASE_URL`.** A MySQL URL and a MariaDB URL
+are indistinguishable, and the two differ in ways the schema has to know about, so the
+dialect is declared rather than guessed.
+
+**Three things the error handler does that a default one does not.** A thrown `ApiError` is
+deliberate and its message is shown; anything else is a defect, logged in full with the
+request id and rendered as a bare `internal_error`, because an unexpected exception's message
+is exactly the sort of thing that carries a query fragment. Express's own malformed-JSON
+`SyntaxError` is translated to `400 malformed_json` rather than counted as a defect. And an
+error raised after the response has started destroys the connection instead of leaving a
+client waiting on a body that will never arrive.
+
+**The inbound `X-Request-Id` is honoured but sanitized** — 128 characters, `[A-Za-z0-9._-]`
+only. The value lands in a response header and in every log line for that request, so
+accepting it unfiltered is header injection and log injection in one.
+
+Verified: `npm run check` green — `tsc --noEmit` clean under `strict`,
+`noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`, and 18 tests passing across four
+suites. `npm run build` compiles, and the compiled entry point was run and probed by hand:
+`/health` returns `{"status":"ok"}` with a dead probe registered, `/health/ready` returns
+`ready`, an unmatched route returns the documented envelope, `X-Request-Id` is set,
+`X-Powered-By` is absent, and SIGTERM exits cleanly.
+
+Also added `wiki/environments/setup.md` and `wiki/environments/env.md`, which the agents
+setup task deliberately left out because there was no `package.json` to describe. Both are
+registered in `project-wiki-index.md`, and `.agents/rules/repository.md` now carries real
+build commands in place of the "none yet" note.
+
+Next task depends on: `createApp`'s options shape, which the persistence layer extends with a
+readiness probe rather than a module-level connection.

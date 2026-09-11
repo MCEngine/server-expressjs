@@ -20,3 +20,10 @@ are plain markdown with no frontmatter. This index never writes into `.agents/`.
 | [`information/overview.md`](../../wiki/information/overview.md) | What this service is, the three repositories it sits between, and the surfaces it will expose. |
 | [`information/data-model.md`](../../wiki/information/data-model.md) | Every table, column and constraint, which rules the schema carries itself, and what stays portable across the four SQL engines. |
 | [`information/api-contract.md`](../../wiki/information/api-contract.md) | Every route, the three authentication schemes, the error envelope, the nine upload checks, and the one route the plugin polls. |
+
+## Environments
+
+| File | Purpose |
+|---|---|
+| [`environments/setup.md`](../../wiki/environments/setup.md) | Requirements, the commands, what `npm run check` gates, and why `createApp()` never binds a port. |
+| [`environments/env.md`](../../wiki/environments/env.md) | Every environment variable, its type and default, and why the database provider is not derived from the URL. |
