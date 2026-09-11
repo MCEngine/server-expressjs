@@ -85,6 +85,13 @@ one that asks.
 
 ## Fixed
 
+- **`src/storage/index.ts` was never committed, so the repository did not typecheck from a clean
+  clone.** A `.gitignore` pattern written for the directory the disk driver writes into —
+  `storage/`, with no leading slash — matches at every depth, and silently also matched the
+  module implementing that driver. The file is now tracked, the patterns that name a single
+  root directory are anchored, and `npm run check` fails if anything under `src/` is ever
+  git-ignored again.
+
 - **The container image could not be built.** `npm ci` ran `node-gyp rebuild` against
   `better-sqlite3` and died looking for Python. npm does that by itself for any package with a
   `binding.gyp` and no `install` script of its own — and the binary was in the package the whole
