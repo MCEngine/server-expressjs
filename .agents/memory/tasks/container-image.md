@@ -80,3 +80,48 @@ the end: each task verifies what the image wraps, by hand, against the same comm
 Dockerfile runs.
 
 Next task depends on: nothing beyond this record.
+
+### Task 2 — build/container-image
+
+A three-stage `Dockerfile`, a `.dockerignore`, and `wiki/environments/deployment.md`.
+
+**Three stages, not two, because the production dependencies are installed rather than
+copied.** The build stage has devDependencies and compiles `dist/`; a separate `deps` stage runs
+`npm ci --omit=dev` on the same base image; the runtime copies both results. Copying
+`node_modules` out of the build stage would ship a test runner and a compiler, and would also
+bind `better-sqlite3`'s native binary to whatever stage happened to install it.
+
+**`node:22-bookworm-slim`, not Alpine.** `better-sqlite3` publishes prebuilt binaries against
+glibc and none against musl, so Alpine means `python3`, `make` and `g++` in a production image
+to compile a dependency that has a binary already. Recorded in
+[`../decisions/container-image-shape.md`](../decisions/container-image-shape.md).
+
+**The healthcheck is readiness and is written in `node --eval`.** Docker's `HEALTHCHECK`
+restarts nothing — it publishes the status other things gate on — so readiness is the right
+probe, and liveness stays the one that checks nothing. Neither `curl` nor `wget` is in this base
+image; Node 22's global `fetch` means the check adds no package.
+
+**`.dockerignore` is a correctness file here, not a tidiness one.** Without it the whole working
+tree becomes build context, which sends `.env` and `dev.sqlite` to the daemon and uploads
+`node_modules` only for `npm ci` to discard it.
+
+**Verified without building, because there is no Docker daemon in this session — and what was
+not run is said rather than implied.** Everything the image wraps was run directly, against the
+same commands the Dockerfile issues:
+
+* `npm run build` produces `dist/index.js`.
+* `npm ci --omit=dev` into a tree holding only `package.json`, the lockfile and `dist/` — which
+  is exactly the runtime stage's contents — resolves cleanly at 46 MB, and `typescript` is
+  absent from it. This is the check that matters most: a runtime import of a devDependency is
+  the classic way a Dockerfile passes its build and fails on first boot.
+* `node dist/index.js` under `NODE_ENV=production` applied `001-initial`, listened, answered
+  `/health` with `{"status":"ok"}` and `/health/ready` with the database check passing.
+* The literal `HEALTHCHECK` command, copied out of the Dockerfile and run as-is, exited `0`.
+* `SIGTERM` logged `shutting down` and exited `0`, which is what the exec-form `CMD` is for.
+
+What remains unverified is the image build itself: base image resolution, layer caching, and
+`better-sqlite3` taking its prebuilt binary on `linux/amd64`. Those need a daemon.
+
+Next task depends on: the topology. The panel's image proxies `/api` to this one, so its nginx
+template is written against the port and the health route here.
+
