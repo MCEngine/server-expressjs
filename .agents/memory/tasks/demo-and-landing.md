@@ -49,11 +49,11 @@ Recorded in [`../decisions/demo-account.md`](../decisions/demo-account.md).
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/demo-and-landing-plan` | `.agents/memory/`, `.agents/index/` | |
-| 2 | Demo account and a public meta endpoint | Config, seeding, the route, the contract | `server-expressjs` | `feat/demo-account` | `src/config.ts`, `src/routes/`, `src/index.ts`, `wiki/`, `test/` | |
-| 3 | A landing page at `/` | The page, and the catalogue moved to `/products` | `client-reactjs` | `feat/landing-page` | `src/routes/`, `src/App.tsx`, `test/` | |
-| 4 | Demo hint on sign in, confirm password on register | Both auth forms | `client-reactjs` | `feat/auth-forms` | `src/routes/account/`, `src/api/`, `test/` | |
-| 5 | Release | Logs, this table, the record closed | both | `chore/demo-and-landing-release` | `wiki/logs/0/0/0/`, `.agents/` | |
+| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/demo-and-landing-plan` | `.agents/memory/`, `.agents/index/` | MCEngine/server-expressjs#27 |
+| 2 | Demo account and a public meta endpoint | Config, seeding, the route, the contract | `server-expressjs` | `feat/demo-account` | `src/config.ts`, `src/routes/`, `src/index.ts`, `wiki/`, `test/` | MCEngine/server-expressjs#28 |
+| 3 | A landing page at `/` | The page, and the catalogue moved to `/products` | `client-reactjs` | `feat/landing-page` | `src/routes/`, `src/App.tsx`, `test/` | MCEngine/client-reactjs#17 |
+| 4 | Demo hint on sign in, confirm password on register | Both auth forms | `client-reactjs` | `feat/auth-forms` | `src/routes/account/`, `src/api/`, `test/` | MCEngine/client-reactjs#18 |
+| 5 | Release | Logs, this table, the record closed | both | `chore/demo-and-landing-release` | `wiki/logs/0/0/0/`, `.agents/` | MCEngine/server-expressjs#29, MCEngine/client-reactjs#19 |
 
 ## Entries
 
@@ -108,3 +108,24 @@ Verified: `npm run check` green — **270** tests across twenty suites, 10 of th
 Next task depends on: `GET /meta`. The panel's sign-in page cannot show a demo account before
 something tells it one exists.
 
+### Task 5 — chore/demo-and-landing-release
+
+Filled the `PR` column, wrote this entry, and brought `repository-state.md` current.
+
+**The version did not move.**
+
+**What the panel found that this repository's tests could not.** Task 4's first draft rendered
+the demo-account block through `AsyncBoundary`, which turns a failed read into an alert — so a
+deployment with the flag **off** showed an error on its sign-in page. This side was correct
+throughout: `/meta` returns `{"demo_account": null}` and always did. The defect only existed
+where the two meet, and only the panel's suite could see it.
+
+**The request's constraint held, and is tested on both sides.** Register and sign in remain real
+pages backed by real routes: here, a test registers an account and signs in with it while the
+demo account is enabled; there, a test asserts the sign-in page still offers registering.
+
+Next task depends on: nothing. This closes the record.
+
+## Status
+
+**Done.** All five tasks landed; the table above carries the pull request each merged through.
