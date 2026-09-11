@@ -29,6 +29,7 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`tasks/container-image.md`](../memory/tasks/container-image.md) | Containerizing the server and the panel: the confirmed four-task plan across two repositories, and one entry per task. |
 | [`tasks/native-module-build.md`](../memory/tasks/native-module-build.md) | Fixing the image build that npm’s implicit node-gyp broke: the three-task plan, and one entry per task. |
 | [`tasks/untracked-source.md`](../memory/tasks/untracked-source.md) | A source file that was never committed because an ignore pattern over-matched: the three-task plan, and one entry per task. |
+| [`tasks/writable-data.md`](../memory/tasks/writable-data.md) | The image defaulting its database onto a read-only path: the three-task plan, and one entry per task. |
 
 ## Decisions
 
@@ -38,4 +39,5 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`decisions/container-image-shape.md`](../memory/decisions/container-image-shape.md) | The base images, the user, the healthcheck and the same-origin topology the two Dockerfiles assume, and why each was chosen. |
 | [`decisions/native-module-install.md`](../memory/decisions/native-module-install.md) | Why `npm ci` runs with `--ignore-scripts`, what it prevents, and the correction to an earlier claim about `better-sqlite3` prebuilds. |
 | [`decisions/gitignore-anchoring.md`](../memory/decisions/gitignore-anchoring.md) | Why ignore patterns naming a root artifact are anchored, and the guard that fails the suite if a source file is ever ignored again. |
+| [`decisions/writable-paths.md`](../memory/decisions/writable-paths.md) | Why the image defaults every writable path onto its volume, why startup refuses loudly, and the guard that keeps the two in step. |
 | [`decisions/version-addressed-by-path.md`](../memory/decisions/version-addressed-by-path.md) | Why publishing writes to `PUT /products/:id/versions/:version`, and why a version in the body is refused rather than ignored. |
