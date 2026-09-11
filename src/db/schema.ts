@@ -257,6 +257,19 @@ export interface FleetEventsTable {
   created_at: Timestamp;
 }
 
+export interface NewsTable {
+  id: string;
+  author_account_id: string;
+  title: string;
+  summary: string;
+  /** Markdown, as it was written. Never HTML. */
+  body: string;
+  /** When it was pulled from view, or null while it is visible. */
+  hidden_at: Timestamp | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -279,6 +292,7 @@ export interface Database {
   external_sources: ExternalSourcesTable;
   audit_events: AuditEventsTable;
   fleet_events: FleetEventsTable;
+  news: NewsTable;
 }
 
 export type Account = Selectable<AccountsTable>;

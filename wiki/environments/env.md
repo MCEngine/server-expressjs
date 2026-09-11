@@ -89,6 +89,23 @@ detail.
 Making a cross-origin panel work would mean adding a CORS layer here and making the cookie's
 `SameSite` configurable. Both are changes to this service, not settings on it.
 
+## News
+
+| Key | Type | Default | What it does |
+|---|---|---|---|
+| `NEWS_AUTHORS` | comma-separated handles | empty | The accounts allowed to write news |
+
+**Empty means nobody**, which is the safe default rather than an oversight: this service has no
+staff role, so without a list every signed-in account could publish on the front page — including
+the first stranger who registers. Reading news needs no credential.
+
+```
+NEWS_AUTHORS=alice,bob
+```
+
+Handles are compared lowercased and trimmed. Being on the list means you may *write* news;
+editing, hiding and deleting a particular item belongs to whoever wrote it.
+
 ## Adding a key
 
 Add it to the schema in `src/config.ts`, to `.env.example`, and to this page — in the same

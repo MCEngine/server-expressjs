@@ -55,3 +55,17 @@ depend on nothing but stack in the panel's repository behind each other.
 ### Task 1 — chore/news-and-pages-plan
 
 This record and its row in `.agents/index/memory-index.md`. Nothing else.
+
+### Task 2 — feat/news
+
+`002-news.ts` adds the table — `hidden_at` as a timestamp, body as text — and `src/modules/news/`
+holds the repository, service and routes. `NEWS_AUTHORS` is parsed in `src/config.ts` into a
+lowercased list, empty by default.
+
+Paging is keyset, not offset: the cursor is the id of the last row and ids are ULIDs, so "newest
+first" and "after this one" are one ordering. A post published while somebody is scrolling
+therefore cannot shift the page under them, which an `OFFSET` would.
+
+Nine cases, including the two that matter most: an empty allowlist refuses everybody, and a
+hidden item is `404` rather than `403` to a reader who may not see it while staying visible to its
+author.

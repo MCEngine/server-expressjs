@@ -49,6 +49,24 @@ const schema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
 
   /**
+   * Handles allowed to write news, comma-separated.
+   *
+   * **Empty by default, which means nobody.** This service has no staff role,
+   * so without a list every signed-in account could publish on the front page —
+   * and the first stranger to register would be one of them. Reading news needs
+   * no credential; writing it needs a handle named here.
+   */
+  NEWS_AUTHORS: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((handle) => handle.trim().toLowerCase())
+        .filter((handle) => handle.length > 0),
+    ),
+
+  /**
    * Seeds a demo account and advertises its credentials on `GET /meta`.
    *
    * **Off unless deliberately turned on.** The demo account is a real user

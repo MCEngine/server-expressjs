@@ -12,6 +12,7 @@ import { ensureWritableDirectory, writableDirectories } from './lib/writable.js'
 import { createFleetRepository, createFleetService } from './modules/fleet/index.js';
 import { createAuditService } from './modules/audit/index.js';
 import { createSourceService } from './modules/source/index.js';
+import { createNewsRepository, createNewsService } from './modules/news/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -65,12 +66,13 @@ const audit = createAuditService(database.db, systemClock, (error) => {
 });
 
 const sources = createSourceService(database.db, storage, systemClock);
+const news = createNewsService(createNewsRepository(database.db), systemClock);
 
 const app = createApp({
   config,
   logger,
   probes: [databaseProbe(database)],
-  services: { identity, auth, products, fleet, storage, audit, sources },
+  services: { identity, auth, products, fleet, storage, audit, sources, news },
 });
 
 const server = app.listen(config.PORT, () => {
