@@ -111,6 +111,28 @@ closes the database, and exits `0`. Nothing needs an init process: the service s
 processes, so there are no zombies to reap. `docker run --init` is available if a future change
 makes that untrue.
 
+## On a host that builds and runs the image for you
+
+Render, Railway, Fly and similar: the service is built from this Dockerfile and run as it is.
+Four things decide whether that works.
+
+| What | Why |
+|---|---|
+| `JWT_SECRET` | Required, at least 32 characters. The process refuses to boot without it |
+| A disk mounted at `/data` | Without one the database and every published jar are gone at the next deploy — see [What is on the volume](#what-is-on-the-volume), including the ownership check |
+| `PORT` | `src/config.ts` reads it and `app.listen` binds every interface, so a platform that assigns a port is already handled. Do not hardcode one |
+| `DEMO_ACCOUNT_ENABLED` | `true` seeds the demo account and is what makes the panel's sign-in page offer its credentials. **Off unless asked for** — which is why a fresh deployment shows no demo account at all. Read the warning in [`env.md`](env.md) first |
+
+**On Render specifically.** Private network traffic to port `10000` always reaches a web
+service's primary HTTP server whatever port it actually binds, so the panel's `API_UPSTREAM`
+can be this service's internal address with `:10000` and survives a change of `PORT`. A **free**
+web service can send private network requests but cannot receive them — the panel then has to
+reach this service at its public URL instead, `https://<service>.onrender.com`, which the
+panel's image proxies over TLS. Both services must be in the same region for a private address
+to resolve at all.
+
+The panel's repository documents its side of this at `wiki/environments/deployment.md`.
+
 ## Both halves together
 
 The panel's requests are **relative** — `/api/v1/...` — because its refresh token is an
