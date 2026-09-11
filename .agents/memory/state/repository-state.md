@@ -48,14 +48,21 @@ routes.
 Plus the external source resolver: `src/modules/source/`, `src/lib/net.ts` and
 `wiki/security/external-fetch.md`.
 
+**Ships as a container.** `Dockerfile` builds in three stages — compile, install the production
+dependency set on the same base image, then a runtime carrying neither — on
+`node:22-bookworm-slim`, running as the base image's unprivileged user with `/data` as the one
+writable path. `wiki/environments/deployment.md` has the detail, including why the healthcheck
+calls readiness and not liveness.
+
 **Does not exist:** rate limiting and artifact signing, both named under `Open` in
 `wiki/security/artifact-upload.md`; redirect re-validation and a DNS-pinning fetch agent,
-both named under `Open` in `wiki/security/external-fetch.md`. No OAuth provider redirect. No
-Dockerfile and no CI workflow.
+both named under `Open` in `wiki/security/external-fetch.md`. No OAuth provider redirect. No CI
+workflow.
 
-**The server is otherwise feature-complete against `wiki/information/api-contract.md`.** No OAuth provider is wired — `linkIdentity` and
-`signInWithIdentity` work and are tested, but no route performs a provider redirect. No rate
-limiting, though the contract specifies the limits. No Dockerfile and no CI workflow.
+**The server is otherwise feature-complete against `wiki/information/api-contract.md`.** No
+OAuth provider is wired — `linkIdentity` and `signInWithIdentity` work and are tested, but no
+route performs a provider redirect. No rate limiting, though the contract specifies the limits.
+No CI workflow.
 
 ## Stack
 
@@ -81,15 +88,16 @@ SIGTERM.
 
 ## Next step
 
-**Two plans are finished and both records are closed.** The twenty-task platform plan
-(`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), and the
+**Three plans are finished and all three records are closed.** The twenty-task platform plan
+(`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
-to `PUT /api/v1/products/:id/versions/:version`. Follow-up work opens a new record rather than
-appending to either.
+to `PUT /api/v1/products/:id/versions/:version`, and the container-image plan
+(`../tasks/container-image.md`, also here). Follow-up work opens a new record rather than
+appending to any of them.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies
 and nothing enforces; artifact signing, which is the difference between "these bytes survived
 the wire" and "this org published them" and needs `MCEngine/plugin-manager` to carry the
 public key; an OAuth provider redirect, since linking and signing in already work beneath it;
-and a Dockerfile with a CI workflow. A first shipping version is a version claim and
-therefore asks first.
+and a CI workflow that builds and pushes the image the Dockerfile now
+defines. A first shipping version is a version claim and therefore asks first.

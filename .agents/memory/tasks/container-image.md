@@ -55,10 +55,10 @@ number. Filled by task 4, which is last in every stack and therefore rebases not
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/container-image-plan` | `.agents/memory/`, `.agents/index/` | |
-| 2 | Server container image | Dockerfile, dockerignore, deployment page | `server-expressjs` | `build/container-image` | `Dockerfile`, `.dockerignore`, `wiki/environments/` | |
-| 3 | Panel container image | Dockerfile, nginx template, dockerignore, deployment page | `client-reactjs` | `build/container-image` | `Dockerfile`, `docker/`, `.dockerignore`, `wiki/environments/` | |
-| 4 | Release | Logs, this table, the record closed | both | `chore/container-image-release` | `wiki/logs/0/0/0/`, `.agents/` | |
+| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/container-image-plan` | `.agents/memory/`, `.agents/index/` | MCEngine/server-expressjs#15 |
+| 2 | Server container image | Dockerfile, dockerignore, deployment page | `server-expressjs` | `build/container-image` | `Dockerfile`, `.dockerignore`, `wiki/environments/` | MCEngine/server-expressjs#16 |
+| 3 | Panel container image | Dockerfile, nginx template, dockerignore, deployment page | `client-reactjs` | `build/container-image` | `Dockerfile`, `docker/`, `.dockerignore`, `wiki/environments/` | MCEngine/client-reactjs#8 |
+| 4 | Release | Logs, this table, the record closed | both | `chore/container-image-release` | `wiki/logs/0/0/0/`, `.agents/` | MCEngine/server-expressjs#17, MCEngine/client-reactjs#9 |
 
 ## Entries
 
@@ -125,3 +125,31 @@ What remains unverified is the image build itself: base image resolution, layer 
 Next task depends on: the topology. The panel's image proxies `/api` to this one, so its nginx
 template is written against the port and the health route here.
 
+### Task 4 — chore/container-image-release
+
+The release, in both repositories. Here it filled the `PR` column above, wrote this entry, and
+brought `repository-state.md` current.
+
+**The version did not move.** `@mcengine/server-expressjs` stays at `0.0.0`, and
+`wiki/logs/0/0/0/` already existed, so this appends rather than making a version claim. An image
+tag is not a version claim either — `docker build -t …:0.0.0` names the version the repository
+already carries.
+
+**The plan's own warning held.** It said up front that the images could not be built here and
+that each task would verify what its image wraps instead. That is what happened, and it earned
+its keep: five defects were found by running things rather than reading them — two in this
+repository's sibling task and three in the panel's nginx configuration, including security
+headers silently dropped by nginx's `add_header` inheritance rule. None of them would have been
+visible in a diff.
+
+**One check was caught lying and redone.** An `nginx -t` passed against a template that had
+rendered to an *empty* file, because `envsubst` is not installed in this session. A passing
+check on nothing is worse than no check, so the render moved to Python and the file is asserted
+non-empty before the result counts.
+
+Next task depends on: nothing. This closes the record.
+
+## Status
+
+**Done.** All four tasks landed; the table above carries the pull request each one merged
+through. Follow-up work starts a new record rather than appending here.
