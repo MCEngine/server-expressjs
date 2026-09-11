@@ -106,3 +106,14 @@ a product under your own handle — and answering `owner` there let the caller p
 stop them, turning a `404` into a `400`. The branch now confirms the account is an organization
 first. The reasoning that missed it was "a session actor's account id can never equal an org's",
 which is true and was not the case that broke.
+
+### Task 4 — feat/org-listing
+
+`GET /me/orgs`, session only, returning `{ role, joined_at, org }` per membership — the same
+shape as `GET /orgs/:handle/members` returns for a member, so the panel reads both the same way.
+The repository query already existed; the service method and the route are the whole change.
+
+Under `/me` rather than `/orgs` deliberately: it is a fact about the caller, not a listing of
+organizations, and there is no route that lists organizations. Four cases, including that an API
+token is refused — `session_required` — and that the list is the caller's own rather than
+everyone's.

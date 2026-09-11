@@ -38,6 +38,8 @@ export interface IdentityService {
   removeEmail(accountId: string, emailId: string): Promise<void>;
 
   listMembers(orgId: string): Promise<MemberRecord[]>;
+  /** Every organization this user is a member of, oldest membership first. */
+  listOrgsForUser(userId: string): Promise<MemberRecord[]>;
   addMember(orgId: string, userId: string, role: OrgRole, invitedBy: string): Promise<void>;
   changeRole(orgId: string, userId: string, role: OrgRole): Promise<void>;
   removeMember(orgId: string, userId: string): Promise<void>;
@@ -224,6 +226,7 @@ export function createIdentityService(
     },
 
     listMembers: (orgId) => repo.listMembers(orgId),
+    listOrgsForUser: (userId) => repo.listOrgsForUser(userId),
 
     async addMember(orgId, userId, role, invitedBy) {
       await requireOrg(orgId);

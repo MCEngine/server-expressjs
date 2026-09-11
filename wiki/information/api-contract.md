@@ -93,6 +93,7 @@ not an offset — an offset re-reads rows that shifted under it.
 | `GET` | `/me` | session | The signed-in account |
 | `GET` | `/me/sessions` | session | Every signed-in device |
 | `DELETE` | `/me/sessions/:id` | session | Revoke one device |
+| `GET` | `/me/orgs` | session | The organizations the caller is in, with the role held |
 | `GET` | `/me/emails` | session | |
 | `POST` | `/me/emails` | session | Adds an unverified address |
 | `POST` | `/me/emails/:id/primary` | session | Refused unless verified |
