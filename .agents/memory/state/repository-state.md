@@ -51,8 +51,12 @@ Plus the external source resolver: `src/modules/source/`, `src/lib/net.ts` and
 **Ships as a container.** `Dockerfile` builds in three stages — compile, install the production
 dependency set on the same base image, then a runtime carrying neither — on
 `node:22-bookworm-slim`, running as the base image's unprivileged user with `/data` as the one
-writable path. `wiki/environments/deployment.md` has the detail, including why the healthcheck
-calls readiness and not liveness.
+writable path. **Every `npm ci` passes `--ignore-scripts`**, without which npm compiles
+`better-sqlite3` from source and the build dies looking for Python; the binary ships inside the
+package, and the deps stage opens an in-memory database to prove it loaded. See
+[`../decisions/native-module-install.md`](../decisions/native-module-install.md).
+`wiki/environments/deployment.md` has the rest, including why the healthcheck calls readiness
+and not liveness.
 
 **Does not exist:** rate limiting and artifact signing, both named under `Open` in
 `wiki/security/artifact-upload.md`; redirect re-validation and a DNS-pinning fetch agent,
@@ -88,11 +92,12 @@ SIGTERM.
 
 ## Next step
 
-**Three plans are finished and all three records are closed.** The twenty-task platform plan
+**Four plans are finished and all four records are closed.** The twenty-task platform plan
 (`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
-to `PUT /api/v1/products/:id/versions/:version`, and the container-image plan
-(`../tasks/container-image.md`, also here). Follow-up work opens a new record rather than
+to `PUT /api/v1/products/:id/versions/:version`, the container-image plan
+(`../tasks/container-image.md`, also here), and `../tasks/native-module-build.md`, which fixed
+the image build that plan shipped broken. Follow-up work opens a new record rather than
 appending to any of them.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies

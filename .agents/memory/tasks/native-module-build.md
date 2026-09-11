@@ -52,9 +52,9 @@ Recorded in [`../decisions/native-module-install.md`](../decisions/native-module
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/native-module-build-plan` | `.agents/memory/`, `.agents/index/` | |
-| 2 | Stop npm compiling a shipped binary | The flag, the assertion, and the corrections | `server-expressjs` | `fix/native-module-build` | `Dockerfile`, `wiki/environments/deployment.md`, `.agents/memory/decisions/` | |
-| 3 | Release | Logs, this table, the record closed | `server-expressjs` | `chore/native-module-build-release` | `wiki/logs/0/0/0/`, `.agents/` | |
+| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/native-module-build-plan` | `.agents/memory/`, `.agents/index/` | MCEngine/server-expressjs#18 |
+| 2 | Stop npm compiling a shipped binary | The flag, the assertion, and the corrections | `server-expressjs` | `fix/native-module-build` | `Dockerfile`, `wiki/environments/deployment.md`, `.agents/memory/decisions/` | MCEngine/server-expressjs#19 |
+| 3 | Release | Logs, this table, the record closed | `server-expressjs` | `chore/native-module-build-release` | `wiki/logs/0/0/0/`, `.agents/` | MCEngine/server-expressjs#20 |
 
 ## Entries
 
@@ -122,3 +122,22 @@ full tree and compiles. The flag was never the problem.
 
 Next task depends on: nothing. The release closes the record.
 
+### Task 3 — chore/native-module-build-release
+
+Filled the `PR` column, wrote this entry, and brought `repository-state.md` current.
+
+**The version did not move.** `0.0.0`, and `wiki/logs/0/0/0/` already existed. The changelog
+entry went under `Fixed`, which is where a build that could not run belongs.
+
+**What this plan is really a record of.** Not a flag — a verification that answered the wrong
+question. The previous plan said plainly that no Docker daemon was available and that each task
+would verify what its image wrapped instead. It did, and the substitute check passed, because
+the development machine has a compiler and the image does not. Saying "I could not build it" was
+necessary and was not sufficient: what was missing was asking what the real environment lacks
+that this one has.
+
+Next task depends on: nothing. This closes the record.
+
+## Status
+
+**Done.** All three tasks landed; the table above carries the pull request each merged through.
