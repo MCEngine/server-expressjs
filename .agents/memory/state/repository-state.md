@@ -58,6 +58,12 @@ package, and the deps stage opens an in-memory database to prove it loaded. See
 `wiki/environments/deployment.md` has the rest, including why the healthcheck calls readiness
 and not liveness.
 
+**An optional demo account**, off unless `DEMO_ACCOUNT_ENABLED` is on. Seeded through the real
+`register` path and advertised on the public `GET /api/v1/meta`, so an evaluation needs no
+registration. It is a **real account with the usual permissions** — see
+[`../decisions/demo-account.md`](../decisions/demo-account.md) and
+`wiki/environments/env.md` before enabling it anywhere that matters.
+
 **Does not exist:** rate limiting and artifact signing, both named under `Open` in
 `wiki/security/artifact-upload.md`; redirect re-validation and a DNS-pinning fetch agent,
 both named under `Open` in `wiki/security/external-fetch.md`. No OAuth provider redirect. No CI
@@ -106,7 +112,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 260 tests passing across eighteen
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 270 tests passing across twenty
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -114,15 +120,16 @@ SIGTERM.
 
 ## Next step
 
-**Six plans are finished and all six records are closed.** The twenty-task platform plan
+**Seven plans are finished and all seven records are closed.** The twenty-task platform plan
 (`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
 to `PUT /api/v1/products/:id/versions/:version`, the container-image plan
 (`../tasks/container-image.md`, also here), `../tasks/native-module-build.md`, which fixed
 the image build that plan shipped broken, `../tasks/untracked-source.md`, which committed a
-source file an ignore pattern had kept out of the repository, and `../tasks/writable-data.md`,
-which stopped the image defaulting its database onto a read-only path. Follow-up work opens a
-new record rather than appending to any of them.
+source file an ignore pattern had kept out of the repository, `../tasks/writable-data.md`,
+which stopped the image defaulting its database onto a read-only path, and
+`../tasks/demo-and-landing.md`, which added the demo account and `GET /meta`. Follow-up work
+opens a new record rather than appending to any of them.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies
 and nothing enforces; artifact signing, which is the difference between "these bytes survived
