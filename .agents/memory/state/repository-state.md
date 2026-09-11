@@ -120,7 +120,7 @@ SIGTERM.
 
 ## Next step
 
-**Eight plans are finished and all eight records are closed.** The twenty-task platform plan
+**Nine plans are finished and all nine records are closed.** The twenty-task platform plan
 (`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
 to `PUT /api/v1/products/:id/versions/:version`, the container-image plan
@@ -130,7 +130,9 @@ source file an ignore pattern had kept out of the repository, `../tasks/writable
 which stopped the image defaulting its database onto a read-only path,
 `../tasks/demo-and-landing.md`, which added the demo account and `GET /meta`, and
 `../tasks/same-origin-api.md`, which corrected documentation claiming that `PANEL_ORIGIN`
-configures CORS. Follow-up work opens a new record rather than appending to any of them.
+configures CORS, and `../tasks/api-proxy-reachability.md`, this repository's share of fixing a
+panel image that could not resolve its upstream off a Docker network. Follow-up work opens a new
+record rather than appending to any of them.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies
 and nothing enforces; artifact signing, which is the difference between "these bytes survived

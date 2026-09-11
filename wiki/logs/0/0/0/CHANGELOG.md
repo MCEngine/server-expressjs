@@ -129,4 +129,10 @@ one that asks.
   say so, the variable is out of the `docker run` and compose examples, and the field's comment
   says it is reserved for a redirect this service does not yet issue. Nothing changed about how
   the service behaves.
+- **`wiki/environments/deployment.md` says what a host that builds the image needs**: the four
+  settings that decide whether a hosted deployment works — `JWT_SECRET`, a disk mounted at
+  `/data`, `PORT`, and `DEMO_ACCOUNT_ENABLED` — plus Render's own rules about port `10000` and
+  about a free web service being unable to receive private network traffic. Nothing about the
+  service changed; a deployment showing no demo account is the flag being off, which the page
+  now says where it will be read.
 

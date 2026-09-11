@@ -30,3 +30,7 @@ receive it, which is why the panel may have to reach this service at its public 
 set and not a fault. The row says so where someone deploying will read it.
 
 No code changed.
+
+### Task 6 — chore/api-proxy-reachability-release
+
+The changelog entry and the state file. `0.0.0` did not move.
