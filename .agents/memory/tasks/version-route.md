@@ -45,14 +45,16 @@ Task 1 branches from `master`; task `k` branches from task `k-1` **within the sa
 repository**. The two repositories cannot stack, so they are ordered instead.
 
 **PR numbers restart per repository**, so each cell names the repository as well as the
-number. Filled by task 4, which is last in every stack and therefore rebases nothing.
+number, and they continue from the platform plan's — `server-expressjs` was at #11 and
+`client-reactjs` at #5. Filled by task 4, which is last in every stack and therefore rebases
+nothing.
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This file, its decision, and the index row | `server-expressjs` | `chore/version-route-plan` | `.agents/memory/`, `.agents/index/` | |
-| 2 | Address a version by its path | The route, the refusal, the contract, the tests | `server-expressjs` | `refactor/version-route` | `src/modules/product/`, `wiki/information/api-contract.md`, `test/` | |
-| 3 | Panel publishes to the version's URL | The publish form follows the contract | `client-reactjs` | `refactor/version-route` | `src/routes/product/ProductUpdate.tsx`, `test/` | |
-| 4 | Release | Logs, this table, the record closed | both | `chore/release` | `wiki/logs/0/0/0/`, `.agents/` | |
+| 1 | Task record | This file, its decision, and the index row | `server-expressjs` | `chore/version-route-plan` | `.agents/memory/`, `.agents/index/` | MCEngine/server-expressjs#12 |
+| 2 | Address a version by its path | The route, the refusal, the contract, the tests | `server-expressjs` | `refactor/version-route` | `src/modules/product/`, `wiki/information/api-contract.md`, `test/` | MCEngine/server-expressjs#13 |
+| 3 | Panel publishes to the version's URL | The publish form follows the contract | `client-reactjs` | `refactor/version-route` | `src/routes/product/ProductUpdate.tsx`, `test/` | MCEngine/client-reactjs#6 |
+| 4 | Release | Logs, this table, the record closed | both | `chore/version-route-release` | `wiki/logs/0/0/0/`, `.agents/` | MCEngine/server-expressjs#14, MCEngine/client-reactjs#7 |
 
 ## Entries
 
@@ -105,3 +107,28 @@ the same checksum from the same URL; a body version is refused and writes nothin
 non-version path segment is refused; and a `POST` to the collection is now a 404.
 
 Next task depends on: the route. The panel is the only caller that publishes.
+
+### Task 4 — chore/version-route-release
+
+The release, in both repositories. Here it filled the `PR` column above, wrote this entry, added
+the changelog line for the route change, and brought `repository-state.md` current.
+
+**The release branch is `chore/version-route-release`, not `chore/release`.** That name is
+taken by the platform plan's release branch, which is merged but still exists, and a branch is
+never reused across tasks. The plan table above was corrected in this commit rather than left
+naming a branch that does not exist.
+
+**The version did not move.** `@mcengine/server-expressjs` stays at `0.0.0`, and
+`wiki/logs/0/0/0/` already existed, so this appends rather than making a version claim.
+
+**What this change did not touch, deliberately.** `MCEngine/plugin-manager` publishes nothing —
+it polls and downloads, and `GET /products/:id/versions/:version/download` already addressed a
+version by path. Its two tests that name a download URL still pass unmodified, which is the
+check that the download contract really was untouched.
+
+Next task depends on: nothing. This closes the record.
+
+## Status
+
+**Done.** All four tasks landed; the table above carries the pull request each one merged
+through. Follow-up work starts a new record rather than appending here.

@@ -35,7 +35,10 @@ sessions with rotating refresh tokens, scoped API tokens, and the guards) and
 
 Plus the catalogue: `src/modules/product/` (repository, service, validation, routes, and the
 jar inspector), `src/lib/zip.ts`, `src/storage/`, `src/http/multipart.ts`, and
-`wiki/security/artifact-upload.md`.
+`wiki/security/artifact-upload.md`. **All four version routes address a version by path**,
+publishing included — `PUT /products/:id/versions/:version`, which refuses a `version` in the
+body rather than ignoring it. See
+[`../decisions/version-addressed-by-path.md`](../decisions/version-addressed-by-path.md).
 
 Plus the fleet: `src/modules/fleet/` (repository, service, routes).
 
@@ -70,7 +73,7 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 249 tests passing across fifteen
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 253 tests passing across fifteen
 suites, including one case per rule in the data model's *What the schema enforces on its own*
 table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
@@ -78,10 +81,11 @@ SIGTERM.
 
 ## Next step
 
-**The twenty-task plan is finished and its record is closed.** Follow-up work opens a new
-record rather than appending to `../tasks/mcpluginmanager-platform.md`, which stays as the
-account of how this repository got here. The plan table itself is in
-`MCEngine/plugin-manager` at `.agents/memory/tasks/mcpluginmanager-platform.md`.
+**Two plans are finished and both records are closed.** The twenty-task platform plan
+(`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), and the
+version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
+to `PUT /api/v1/products/:id/versions/:version`. Follow-up work opens a new record rather than
+appending to either.
 
 The candidates, in the order they matter: rate limiting, which the contract already specifies
 and nothing enforces; artifact signing, which is the difference between "these bytes survived
