@@ -12,6 +12,12 @@ release, and is appended to as each task lands.
 - `wiki/information/overview.md` — what this service is, the three repositories it sits
   between, and the surfaces it will expose.
 - This changelog, and the version-directory log structure it sits in.
+- `wiki/information/data-model.md` — every table, column and constraint, the rules the schema
+  carries itself rather than delegating to a handler, and what stays portable across SQLite,
+  PostgreSQL, MySQL and MariaDB.
+- `wiki/information/api-contract.md` — every route, the three authentication schemes, the
+  error envelope, the nine ordered checks an upload must pass, and the single payload the
+  plugin polls for.
 
 ## Changed
 
