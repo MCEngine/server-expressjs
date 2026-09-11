@@ -5,6 +5,7 @@ import { requestContext } from './http/requestContext.js';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler.js';
 import { createHealthRouter, type ReadinessProbe } from './routes/health.js';
 import { createMetaRouter } from './routes/meta.js';
+import { createNewsRouter, type NewsService } from './modules/news/index.js';
 import { createIdentityRouter, type IdentityService } from './modules/identity/index.js';
 import { attachActor, createAuthRouter, type AuthService } from './modules/auth/index.js';
 import { createProductRouter, type ProductService } from './modules/product/index.js';
@@ -32,6 +33,7 @@ export interface AppServices {
    */
   readonly audit?: AuditService;
   readonly sources?: SourceService;
+  readonly news?: NewsService;
 }
 
 export interface AppOptions {
@@ -91,6 +93,13 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
 
   if (services.identity !== undefined) {
     app.use('/api/v1', createIdentityRouter(services.identity, audit));
+  }
+
+  if (services.news !== undefined && services.identity !== undefined) {
+    app.use(
+      '/api/v1',
+      createNewsRouter(services.news, services.identity, audit, config.NEWS_AUTHORS),
+    );
   }
 
   if (services.products !== undefined && services.identity !== undefined && services.storage !== undefined) {

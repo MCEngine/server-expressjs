@@ -128,6 +128,33 @@ signed-in user, and an API token is refused with `session_required`.
 Removing the owner is refused rather than cascaded. An org with no owner has no one who can
 delete it or transfer it, which is a state with no exit.
 
+## News
+
+| Method | Route | Auth | Notes |
+|---|---|---|---|
+| `GET` | `/news` | none | Ten newest by default, `?limit` up to 50, `?cursor` for the next page |
+| `GET` | `/news/:id` | none | `404` for a hidden item unless the caller may see it |
+| `POST` | `/news` | session, a handle in `NEWS_AUTHORS` | |
+| `PATCH` | `/news/:id` | session, **the author** | `title`, `summary`, `body`, `hidden` |
+| `DELETE` | `/news/:id` | session, **the author** | |
+
+`body` is **Markdown**, stored as written and never as HTML. What renders it decides what it
+supports; the service stores text.
+
+**Writing news is allowlisted.** This service has no staff role, so `NEWS_AUTHORS` — a
+comma-separated list of handles, empty by default — is what separates "signed in" from "publishes
+on the front page". Editing, hiding and deleting belong to the author of the piece, not to
+everyone on the list.
+
+`hidden` is a boolean in and a boolean out; the row stores `hidden_at`, so it records when an item
+was pulled rather than only that it was. A hidden item is absent from the list and `404` on its
+own route — not `403`, which would confirm it exists — except to its author and to the other
+accounts on the allowlist.
+
+The cursor is the id of the last row returned, and ids are ULIDs, so "newest first" and "after
+this one" are the same ordering. `next_cursor` is `null` on a short page, which is what stops a
+reader asking for a page that was never there.
+
 ## Meta
 
 | Method | Route | Auth | Notes |

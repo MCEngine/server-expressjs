@@ -4,7 +4,14 @@ import { ulid } from '../../lib/ids.js';
 import { iso, type Clock } from '../../lib/clock.js';
 import type { Actor } from '../auth/service.js';
 
-export type SubjectType = 'account' | 'org' | 'product' | 'product_version' | 'server' | 'token';
+export type SubjectType =
+  | 'account'
+  | 'org'
+  | 'product'
+  | 'product_version'
+  | 'server'
+  | 'token'
+  | 'news';
 
 export interface AuditEntry {
   readonly actor?: Actor | undefined;

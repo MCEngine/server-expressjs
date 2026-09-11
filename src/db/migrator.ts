@@ -3,6 +3,7 @@ import { Migrator, type Migration, type MigrationProvider } from 'kysely/migrati
 import type { Database } from './schema.js';
 import type { DialectTypes } from './types.js';
 import { migration001Initial } from './migrations/001-initial.js';
+import { migration002News } from './migrations/002-news.js';
 
 /**
  * The migrations, in order, as a literal list.
@@ -15,6 +16,7 @@ import { migration001Initial } from './migrations/001-initial.js';
 export function migrations(types: DialectTypes): Record<string, Migration> {
   return {
     '001-initial': migration001Initial(types),
+    '002-news': migration002News(types),
   };
 }
 
