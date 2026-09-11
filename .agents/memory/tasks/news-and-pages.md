@@ -69,3 +69,8 @@ therefore cannot shift the page under them, which an `OFFSET` would.
 Nine cases, including the two that matter most: an empty allowlist refuses everybody, and a
 hidden item is `404` rather than `403` to a reader who may not see it while staying visible to its
 author.
+
+### Task 3 — chore/news-and-pages-release
+
+The changelog entry and the state file. `0.0.0` did not move. The panel's five tasks follow; task
+6 calls these routes.

@@ -157,4 +157,11 @@ one that asks.
   `subject_type = 'org'`: the provenance of an org-owned credential was recorded and reached
   nobody. It matters for exactly those tokens, because the token acts as the organization and the
   row is the only thing that still says which admin made it.
+- **News.** `GET /news` (ten newest, keyset-paged on the id), `GET /news/:id`, and `POST`,
+  `PATCH`, `DELETE` behind a session. Bodies are **Markdown**, stored as written and never as
+  HTML. Hiding records `hidden_at` rather than a flag, and a hidden item is `404` to a reader who
+  may not see it rather than `403` — which would confirm it exists — while staying visible to its
+  author. Writing is gated by **`NEWS_AUTHORS`**, a comma-separated list of handles that is
+  **empty by default**: this service has no staff role, so without it every signed-in account
+  could publish on the front page. Editing and deleting belong to the author of the piece.
 
