@@ -112,6 +112,29 @@ export function createIdentityRouter(identity: IdentityService, audit: AuditServ
     res.json(publicAccount(updated));
   });
 
+  /**
+   * The organizations the caller belongs to.
+   *
+   * Under `/me` rather than `/orgs`, because it is a fact about the caller
+   * rather than a listing of organizations — there is no route that lists
+   * organizations, and this one must never become it.
+   *
+   * The role rides along: the panel decides what to offer from it, and asking
+   * per organization would be a request each.
+   */
+  router.get('/me/orgs', requireSession, async (req, res) => {
+    const actor = actorOf(req);
+    const memberships = await identity.listOrgsForUser(actor.accountId);
+    res.json({
+      data: await Promise.all(
+        memberships.map(async (m) => {
+          const org = await identity.requireAccount(m.org_id);
+          return { role: m.role, joined_at: m.created_at, org: publicAccount(org) };
+        }),
+      ),
+    });
+  });
+
   router.get('/me/emails', requireSession, async (req, res) => {
     const actor = actorOf(req);
     const emails = await identity.listEmails(actor.accountId);
