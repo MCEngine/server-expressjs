@@ -36,6 +36,11 @@ release, and is appended to as each task lands.
 - `src/lib/version.ts` — `normalizeVersion` and `compareVersions`, so `1.10.0` is newer than
   `1.9.0` rather than older.
 - Sixteen constraint tests, one per rule the data model says the schema carries itself.
+- `src/modules/identity/` — accounts and organizations over one handle namespace, the
+  thirty-day handle cooldown with its released-handle history, multiple email addresses with
+  exactly one primary, org membership and roles, and free-tier org settings.
+- `src/lib/clock.ts`, so a cooldown boundary is testable without sleeping.
+- `GET /api/v1/accounts/:handle`, the one identity route that needs no caller.
 
 ## Changed
 

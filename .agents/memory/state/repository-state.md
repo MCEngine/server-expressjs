@@ -26,10 +26,13 @@ Plus the persistence layer: `src/db/` (typed schema, dialect table, connection f
 Kysely plugins, the migration runner and the initial migration), `src/lib/ids.ts` and
 `src/lib/version.ts`.
 
-**Does not exist:** every domain route. No accounts, no orgs, no tokens, no products, no
-uploads, no fleet — the schema is there and tested, but nothing above it is. No storage
-driver: `storage_key` is specified and nothing writes bytes yet. No Dockerfile and no CI
-workflow; neither was asked for.
+Plus the identity domain: `src/modules/identity/` (repository, service, validation, the public
+account route) and `src/lib/clock.ts`.
+
+**Does not exist:** authentication — no credentials, no sessions, no API tokens, and so no
+authenticated routes; the identity service is complete but only `GET /accounts/:handle` is
+mounted. No products, no uploads, no fleet. No storage driver: `storage_key` is specified and
+nothing writes bytes yet. No Dockerfile and no CI workflow; neither was asked for.
 
 ## Stack
 
@@ -47,17 +50,17 @@ indexes and `CHECK` constraints the approved data model puts in the database —
 stays deferred to a separate adapter, and the reasons got stronger: it has neither of those
 either.
 
-**Verified:** `npm run check` green — `tsc --noEmit` clean and 67 tests passing across eight
+**Verified:** `npm run check` green — `tsc --noEmit` clean and 97 tests passing across nine
 suites, including one case per rule in the data model's *What the schema enforces on its own*
-table. `npm run build` compiles; the compiled entry point applies migrations on first boot,
+table and thirty covering the identity domain. `npm run build` compiles; the compiled entry point applies migrations on first boot,
 applies none on the second, reports the database in `/health/ready`, and exits cleanly on
 SIGTERM.
 
 ## Next step
 
-The identity module: accounts, profiles and the handle cooldown, emails, org membership and
-roles, org settings. Repository functions over `src/db/`, routes as specified in
-`wiki/information/api-contract.md`.
+Authentication: password credentials, OAuth identities, per-device sessions with rotating
+refresh tokens, and scoped API tokens — then the authenticated identity routes, which are
+written but not yet mounted because they need a caller.
 
 The full ordered plan is in `MCEngine/plugin-manager` at
 `.agents/memory/tasks/mcpluginmanager-platform.md`.

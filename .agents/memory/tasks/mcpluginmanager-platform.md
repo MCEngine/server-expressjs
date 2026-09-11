@@ -202,3 +202,48 @@ reported the database reachable, and 23 tables existed on disk.
 
 Next task depends on: `src/db/schema.ts` and the ULID helper. Every module from here reads
 and writes through them.
+
+### Task 9 — feat/account
+
+The identity domain: accounts, profiles and the handle cooldown, emails, organizations,
+membership and roles, and org settings. Repository, service, validation, and the one route
+that needs no caller.
+
+**The task was scoped to the domain rather than the HTTP surface, because of an ordering
+problem in the plan.** Task 9 is accounts and task 10 is authentication, but almost every
+account route needs a signed-in caller — and authentication needs accounts to sign in to.
+Rather than reorder the approved list or stub an auth check (which is a security hole wearing
+a placeholder's clothes), this task delivers the whole identity domain plus
+`GET /accounts/:handle`, which is public. Task 10 brings the caller and mounts the rest of
+the routes on top of a service that already works and is already tested.
+
+**Five rules the database cannot carry, so the service does:**
+
+* An org's owner must be a `user` and a product's owner must be an `org` — no portable
+  `CHECK` can follow a foreign key to test the referenced row's type.
+* Ownership moves only by transfer. Inviting or promoting to `owner` is refused with its own
+  message rather than being left to collide with the partial unique index, which would report
+  a constraint name.
+* The owner cannot be removed or demoted. An org with no owner has nobody who can delete it
+  or transfer it — a state with no exit.
+* An unverified email cannot be made primary. Otherwise anyone who can add an address can
+  redirect the account's password resets to it.
+* A reserved handle is rejected before the database is asked, so the reason is `handle_reserved`
+  rather than a unique-constraint conflict that says nothing.
+
+**Two places where the status code is the security decision.** `requireRole` answers a
+non-member with `404`, not `403`, so an organization cannot be discovered by probing for a
+permission error. Touching another account's email address answers `404` for the same reason.
+
+**The clock is injected.** `src/lib/clock.ts` exists so the cooldown boundary can be asserted
+at twenty-nine days and thirty-one without sleeping or mocking a global — which is the only
+way that test is worth writing.
+
+Verified: `npm run check` green, 97 tests across nine suites, 30 of them new. Among them:
+ownership transfer never leaves two owners or none; a released handle is recorded in the same
+transaction that replaces it; the public account route omits an unset field rather than
+sending `null`, never exposes an email or a status, and answers a malformed handle exactly as
+it answers an unused one.
+
+Next task depends on: `IdentityService`, which authentication calls to create an account on
+registration and to resolve an actor's org roles.
