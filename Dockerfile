@@ -2,10 +2,15 @@
 
 # Central server for MCPluginManager.
 #
-# Debian slim rather than Alpine, deliberately: better-sqlite3 is a native
-# module that publishes prebuilt binaries against glibc and none against musl.
-# On Alpine, npm falls back to compiling it, which means python3, make and g++
-# in a production runtime for a dependency that has a binary two lines away.
+# No build toolchain in any stage. better-sqlite3 is a native module, but it
+# ships its binaries inside the published package at prebuilds/ -- for glibc and
+# musl, x64 and arm64 -- so nothing here needs compiling.
+#
+# Getting that requires --ignore-scripts on every npm ci below. npm runs
+# `node-gyp rebuild` *by itself* for any package with a binding.gyp and no
+# install script of its own, which is what better-sqlite3 is; without the flag
+# the build dies looking for Python. See
+# .agents/memory/decisions/native-module-install.md.
 ARG NODE_VERSION=22-bookworm-slim
 
 # ---------------------------------------------------------------------------
@@ -19,7 +24,7 @@ WORKDIR /app
 # package.json and the lockfile disagree, which is what makes the image
 # reproducible.
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
@@ -36,7 +41,14 @@ RUN npm run build
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+
+# Opening an in-memory database is the smallest thing that forces the native
+# addon to load. It is here so that a change breaking the prebuild path fails
+# *this build*, at the line responsible -- rather than producing an image that
+# builds cleanly and dies on its first request.
+RUN npm ci --omit=dev --ignore-scripts \
+ && node -e "new (require('better-sqlite3'))(':memory:').close()" \
+ && npm cache clean --force
 
 # ---------------------------------------------------------------------------
 # Runtime.

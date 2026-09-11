@@ -83,6 +83,15 @@ one that asks.
   volume, why the healthcheck calls readiness rather than liveness, and the compose example that
   puts the panel in front.
 
+## Fixed
+
+- **The container image could not be built.** `npm ci` ran `node-gyp rebuild` against
+  `better-sqlite3` and died looking for Python. npm does that by itself for any package with a
+  `binding.gyp` and no `install` script of its own — and the binary was in the package the whole
+  time, at `prebuilds/`. Both `npm ci` invocations now pass `--ignore-scripts`, and the deps
+  stage opens an in-memory database so a broken prebuild path fails the build instead of the
+  first request.
+
 ## Changed
 
 - **Publishing a version moved to `PUT /api/v1/products/:id/versions/:version`**, from
