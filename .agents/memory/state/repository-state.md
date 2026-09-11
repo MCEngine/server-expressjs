@@ -96,6 +96,10 @@ before the first connection. See
 [`../decisions/native-module-install.md`](../decisions/native-module-install.md) and
 [`../decisions/writable-paths.md`](../decisions/writable-paths.md).
 
+**A token names its creator**, in the payload and in the organization's audit trail — an
+org-owned token acts as the organization, so that row is the only record of which admin minted
+it.
+
 **Organizations are administrable over the API.** `GET /me/orgs` lists what an account belongs
 to, `/orgs/:handle/tokens` gives an org its own credentials, and `POST /tokens` no longer takes
 an unchecked owner — that one was a privilege escalation, recorded in
