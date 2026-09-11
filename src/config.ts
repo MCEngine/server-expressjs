@@ -38,6 +38,25 @@ const schema = z.object({
   PANEL_ORIGIN: z.string().url().default('http://localhost:5173'),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
+
+  /**
+   * Seeds a demo account and advertises its credentials on `GET /meta`.
+   *
+   * **Off unless deliberately turned on.** The demo account is a real user
+   * account: whoever can reach the panel can sign in as it, create an
+   * organization, and publish artifacts that Minecraft servers download and
+   * execute. It exists so an evaluation needs no registration, and it is not
+   * safe on a deployment you would mind a stranger publishing into.
+   *
+   * `z.coerce.boolean()` is wrong here -- it makes the string "false" true.
+   */
+  DEMO_ACCOUNT_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  DEMO_ACCOUNT_HANDLE: z.string().min(2).max(39).default('demo'),
+  DEMO_ACCOUNT_EMAIL: z.string().email().default('demo@mcengine.local'),
+  DEMO_ACCOUNT_PASSWORD: z.string().min(12).default('demo-password-1234'),
 });
 
 export type Config = Readonly<z.infer<typeof schema>>;

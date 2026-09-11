@@ -106,6 +106,11 @@ one that asks.
   stage opens an in-memory database so a broken prebuild path fails the build instead of the
   first request.
 
+- `GET /api/v1/meta` — public, and an optional **demo account**. With `DEMO_ACCOUNT_ENABLED` on,
+  the server seeds a real account through the same `register` path a person uses and advertises
+  its credentials here, so an evaluation needs no registration. Off by default; registering and
+  signing in are unaffected. What enabling it costs is in `wiki/environments/env.md`.
+
 ## Changed
 
 - **Publishing a version moved to `PUT /api/v1/products/:id/versions/:version`**, from

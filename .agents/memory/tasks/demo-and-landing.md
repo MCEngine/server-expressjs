@@ -78,3 +78,33 @@ and run. Off by default, a startup warning when on, and `wiki/environments/env.m
 next to the variable.
 
 Next task depends on: nothing beyond this record.
+
+### Task 2 — feat/demo-account
+
+Four config keys, a public `GET /api/v1/meta`, and a seeder that goes through `register`.
+
+**`DEMO_ACCOUNT_ENABLED` is `z.enum(['true','false'])`, not `z.coerce.boolean()`**, because
+`Boolean("false")` is `true` — a flag that turns itself on when you explicitly disable it is
+worse than no flag. There is a test for the literal string `"false"`.
+
+**The seeder calls `auth.register`, the same path the panel calls.** What it produces is
+indistinguishable from an account someone made, which is the point: an evaluation that signs in
+as something the real path could not have produced demonstrates nothing. A test signs in with
+the seeded credentials and reads `/me` back.
+
+**It never fails startup and is idempotent.** The second call — what a redeploy onto an existing
+volume does — is a no-op, and a handle that cannot be registered at all (`new` is reserved) is
+logged rather than thrown. A convenience that cannot be provided must not become an outage.
+
+**`GET /meta` returns the password.** That is deliberate and is written down in three places:
+the route, the contract, and `env.md`. It is a credential the operator published by turning the
+flag on.
+
+**A test holds the line the request drew**: registering a new account and signing in with it
+still work with the demo account enabled. The demo account is an addition, never a replacement.
+
+Verified: `npm run check` green — **270** tests across twenty suites, 10 of them new.
+
+Next task depends on: `GET /meta`. The panel's sign-in page cannot show a demo account before
+something tells it one exists.
+
