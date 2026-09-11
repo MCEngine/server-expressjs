@@ -43,14 +43,34 @@ function deviceOf(req: Request, label?: string): DeviceContext {
   };
 }
 
-/** A token record as the panel sees it. Never includes the secret. */
-function publicToken(record: ApiTokenRecord): Record<string, unknown> {
+/**
+ * A token record as the panel sees it. Never includes the secret.
+ *
+ * `created_by` is the person who minted it, and it matters most for a token an
+ * organization owns: the token acts as the organization, so the row is the only
+ * thing that still says which admin made it. Omitted rather than sent as null
+ * when the account could not be resolved, which is this repository's rule for
+ * an unset field.
+ */
+function publicToken(
+  record: ApiTokenRecord,
+  creator?: AccountRecord | undefined,
+): Record<string, unknown> {
   return {
     id: record.id,
     name: record.name,
     prefix: record.token_prefix,
     scopes: JSON.parse(record.scopes) as string[],
     created_at: record.created_at,
+    ...(creator === undefined
+      ? {}
+      : {
+          created_by: {
+            id: creator.id,
+            handle: creator.handle,
+            display_name: creator.display_name,
+          },
+        }),
     ...(record.expires_at === null ? {} : { expires_at: record.expires_at }),
     ...(record.last_used_at === null ? {} : { last_used_at: record.last_used_at }),
   };
@@ -140,10 +160,28 @@ export function createAuthRouter(
     res.status(204).end();
   });
 
+
+  /**
+   * Resolves each token's creator, one lookup per distinct account.
+   *
+   * An organization's list is mostly minted by the same one or two admins, so
+   * a lookup per token would be the same query repeated.
+   */
+  const withCreators = async (
+    tokens: readonly ApiTokenRecord[],
+  ): Promise<Record<string, unknown>[]> => {
+    if (identity === undefined) return tokens.map((t) => publicToken(t));
+    const accounts = new Map<string, AccountRecord>();
+    for (const id of new Set(tokens.map((t) => t.created_by))) {
+      accounts.set(id, await identity.requireAccount(id));
+    }
+    return tokens.map((t) => publicToken(t, accounts.get(t.created_by)));
+  };
+
   router.get('/tokens', requireSession, async (req, res) => {
     const actor = actorOf(req);
     const tokens = await auth.listApiTokens(actor.accountId);
-    res.json({ data: tokens.map(publicToken) });
+    res.json({ data: await withCreators(tokens) });
   });
 
   /**
@@ -195,7 +233,10 @@ export function createAuthRouter(
       ip: req.ip,
     });
 
-    res.status(201).json({ ...publicToken(record), token });
+    res.status(201).json({
+      ...publicToken(record, await identity?.requireAccount(actor.accountId)),
+      token,
+    });
   });
 
   /*
@@ -224,7 +265,7 @@ export function createAuthRouter(
   router.get('/orgs/:handle/tokens', requireSession, async (req, res) => {
     const org = await administeredOrg(req);
     const tokens = await auth.listApiTokens(org.id);
-    res.json({ data: tokens.map(publicToken) });
+    res.json({ data: await withCreators(tokens) });
   });
 
   router.post('/orgs/:handle/tokens', requireSession, async (req, res) => {
@@ -240,16 +281,28 @@ export function createAuthRouter(
       expiresInDays: body.expiresInDays ?? null,
     });
 
+    /*
+     * Filed against the organization, not the token.
+     *
+     * `GET /orgs/:handle/audit` reads `subject_type = 'org'`, so an event filed
+     * against the token lands in the table and in nobody's trail but the
+     * creator's own. An organization's credentials are exactly the thing its
+     * admins should be able to see the history of. The token id rides in the
+     * metadata, so nothing is lost.
+     */
     await audit.record({
       actor,
-      subjectType: 'token',
-      subjectId: record.id,
+      subjectType: 'org',
+      subjectId: org.id,
       action: 'token.created',
-      metadata: { name: record.name, scopes: body.scopes, org: org.handle },
+      metadata: { token: record.id, name: record.name, scopes: body.scopes },
       ip: req.ip,
     });
 
-    res.status(201).json({ ...publicToken(record), token });
+    res.status(201).json({
+      ...publicToken(record, await identity?.requireAccount(actor.accountId)),
+      token,
+    });
   });
 
   router.delete('/orgs/:handle/tokens/:id', requireSession, async (req, res) => {
@@ -260,10 +313,10 @@ export function createAuthRouter(
     await auth.revokeApiToken(org.id, tokenId);
     await audit.record({
       actor,
-      subjectType: 'token',
-      subjectId: tokenId,
+      subjectType: 'org',
+      subjectId: org.id,
       action: 'token.revoked',
-      metadata: { org: org.handle },
+      metadata: { token: tokenId },
       ip: req.ip,
     });
     res.status(204).end();

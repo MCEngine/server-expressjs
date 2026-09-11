@@ -34,6 +34,7 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`tasks/same-origin-api.md`](../memory/tasks/same-origin-api.md) | This repository's entries in the same-origin API plan. The plan table itself lives in `MCEngine/client-reactjs`. |
 | [`tasks/api-proxy-reachability.md`](../memory/tasks/api-proxy-reachability.md) | This repository's entries in the API proxy reachability plan. The plan table itself lives in `MCEngine/client-reactjs`. |
 | [`tasks/org-management.md`](../memory/tasks/org-management.md) | Organizations a person can find and administer, and the token-ownership hole found on the way: the confirmed eight-task plan across two repositories. |
+| [`tasks/token-provenance.md`](../memory/tasks/token-provenance.md) | This repository's entries in the token provenance plan. The plan table itself lives in `MCEngine/client-reactjs`. |
 
 ## Decisions
 

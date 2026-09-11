@@ -153,6 +153,12 @@ What enabling it costs is in [`../environments/env.md`](../environments/env.md).
 
 `POST /tokens` returns `{ "token": "mcpm_a1b2c3d4<secret>", "prefix": "a1b2c3d4", ... }` once.
 
+Every token carries **`created_by`** — `{ id, handle, display_name }` — the person who minted it.
+It matters most for a token an organization owns, because the token then acts as the
+organization and the row is the only thing that still says which admin made it. An organization's
+`token.created` and `token.revoked` events are filed against the **organization**, so
+`GET /orgs/:handle/audit` shows them; the token id is in the metadata.
+
 **A token authenticates as its owner**, so `ownerAccountId` decides what it can do. It is
 checked against the same rule as every other "may I act for this account" question — your own
 account, or an organization where you are `admin` or above — because account ids are public and
