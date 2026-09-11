@@ -29,3 +29,9 @@ non-problem, and what adding CORS would actually take.
 
 No behaviour changed: no middleware, no cookie attribute, no variable removed. `PANEL_ORIGIN`
 still validates exactly as it did.
+
+### Task 5 — chore/same-origin-api-release
+
+The changelog entry and the state file. `0.0.0` did not move: nothing shipped, and correcting a
+page is not a release. The state file's next-step list now says what `PANEL_ORIGIN` is reserved
+for, so the next session does not rediscover that it is unused and delete it.
