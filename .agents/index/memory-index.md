@@ -31,6 +31,7 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`tasks/untracked-source.md`](../memory/tasks/untracked-source.md) | A source file that was never committed because an ignore pattern over-matched: the three-task plan, and one entry per task. |
 | [`tasks/writable-data.md`](../memory/tasks/writable-data.md) | The image defaulting its database onto a read-only path: the three-task plan, and one entry per task. |
 | [`tasks/demo-and-landing.md`](../memory/tasks/demo-and-landing.md) | The landing page, the demo account, and the register form’s confirmation field: the five-task plan across two repositories. |
+| [`tasks/same-origin-api.md`](../memory/tasks/same-origin-api.md) | This repository's entries in the same-origin API plan. The plan table itself lives in `MCEngine/client-reactjs`. |
 
 ## Decisions
 
@@ -43,3 +44,4 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`decisions/writable-paths.md`](../memory/decisions/writable-paths.md) | Why the image defaults every writable path onto its volume, why startup refuses loudly, and the guard that keeps the two in step. |
 | [`decisions/demo-account.md`](../memory/decisions/demo-account.md) | Why the demo account is seeded by the server, why the panel asks for its credentials, and what enabling it costs. |
 | [`decisions/version-addressed-by-path.md`](../memory/decisions/version-addressed-by-path.md) | Why publishing writes to `PUT /products/:id/versions/:version`, and why a version in the body is refused rather than ignored. |
+| [`decisions/no-cors-layer.md`](../memory/decisions/no-cors-layer.md) | Why this service emits no `Access-Control-*` header, why `PANEL_ORIGIN` is not that knob, and what adding CORS would take. |

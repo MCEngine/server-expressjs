@@ -33,5 +33,5 @@ are plain markdown with no frontmatter. This index never writes into `.agents/`.
 | File | Purpose |
 |---|---|
 | [`environments/setup.md`](../../wiki/environments/setup.md) | Requirements, the commands, what `npm run check` gates, and why `createApp()` never binds a port. |
-| [`environments/env.md`](../../wiki/environments/env.md) | Every environment variable, its type and default, and why the database provider is not derived from the URL. |
+| [`environments/env.md`](../../wiki/environments/env.md) | Every environment variable, its type and default, why the database provider is not derived from the URL, and why `PANEL_ORIGIN` configures no CORS. |
 | [`environments/deployment.md`](../../wiki/environments/deployment.md) | Running the service as a container: the three build stages, what is on the volume, why the healthcheck is readiness, and how the panel sits in front of it. |

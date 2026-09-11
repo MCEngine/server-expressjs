@@ -50,7 +50,44 @@ transactions across the shapes the schema uses, so it is not one more dialect. S
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `STORAGE_DIR` | string | `./storage` | Where artifact bytes go when storage is disk-backed |
-| `PANEL_ORIGIN` | URL | `http://localhost:5173` | The web panel's origin, for CORS and OAuth redirects |
+| `PANEL_ORIGIN` | URL | `http://localhost:5173` | Validated at startup and **not read by anything yet**. See below before relying on it |
+
+### `PANEL_ORIGIN` does not configure CORS
+
+It is reserved for a redirect target this service does not yet issue. Nothing reads it after
+`src/config.ts` validates it, and setting it does not permit anything:
+
+**This service has no CORS layer.** There is no `cors` dependency and no `Access-Control-*`
+header anywhere in `src/`. Booted with `PANEL_ORIGIN` set to a panel's exact origin, a
+preflight from that origin still comes back with nothing a browser can act on:
+
+```
+OPTIONS /api/v1/auth/login    Origin: https://mcpm-panel.onrender.com
+HTTP/1.1 200 OK
+Allow: POST                   <- Express's own 200 for OPTIONS; no Access-Control-Allow-Origin
+```
+
+The browser refuses the real request on the strength of that, so the request never arrives and
+this service logs nothing. A panel reporting "failed to fetch" against a server whose log is
+empty is this, every time.
+
+**And the refresh cookie is `SameSite=Lax`, hardcoded** in `src/modules/auth/routes.ts`:
+
+```
+Set-Cookie: mcpm_refresh=...; Path=/api/v1/auth; HttpOnly; SameSite=Lax
+```
+
+`Lax` is not sent on a cross-site request. Even with CORS granted, sign-in would appear to
+work and the session would end at the first refresh.
+
+**So the panel must be served from this service's origin**, which is what the panel's own
+container image does — its nginx serves the bundle and proxies `/api` here, so the browser
+sees one origin. The panel's `VITE_API_BASE_URL` must stay empty; its `API_UPSTREAM` is the
+variable that points it at this service. That repository's `wiki/environments/env.md` has the
+detail.
+
+Making a cross-origin panel work would mean adding a CORS layer here and making the cookie's
+`SameSite` configurable. Both are changes to this service, not settings on it.
 
 ## Adding a key
 
