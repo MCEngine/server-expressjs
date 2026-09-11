@@ -64,6 +64,10 @@ release, and is appended to as each task lands.
   carrying every action with its checksum and download URL.
 - `src/modules/audit/` — two event tables with two readers: what people do, and what servers
   do. A logging failure never fails the request that caused it.
+- `src/modules/source/` and `src/lib/net.ts` — mirroring an artifact from SpigotMC, Modrinth,
+  Hangar, a GitHub release or a direct URL, fetched by this service rather than by the plugin
+  and constrained so a caller cannot use it to reach a private address.
+- `wiki/security/external-fetch.md` — the threat model for fetching a URL a caller chose.
 
 ## Changed
 

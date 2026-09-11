@@ -26,6 +26,7 @@ are plain markdown with no frontmatter. This index never writes into `.agents/`.
 | File | Purpose |
 |---|---|
 | [`security/artifact-upload.md`](../../wiki/security/artifact-upload.md) | The threat model for accepting jars and serving them: what each guard is, where it lives, how to verify it, and the two gaps that remain open. |
+| [`security/external-fetch.md`](../../wiki/security/external-fetch.md) | The threat model for fetching a URL a caller chose: the private-range check, why each source type validates its reference, and what remains open. |
 
 ## Environments
 

@@ -48,15 +48,18 @@ there once, and this page links rather than repeats them.
 | `src/http/multipart.ts` | One-file multipart, capped while streaming. |
 | `src/modules/fleet/` | Registered servers, their inventory, and the desired-state payload. |
 | `src/modules/audit/` | Two event tables, written from the route layer. |
+| `src/modules/source/` | Mirroring an artifact from an external site. |
+| `src/lib/net.ts` | The private-range check that keeps `/sources/resolve` from being SSRF. |
 | `src/http/params.ts` | Reads one route parameter as a string. Express 5 types them as `string \| string[]`. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There is no external source resolver.** Everything else the contract specifies exists,
-except rate limiting and artifact signing — both named under `Open` in
-`wiki/security/artifact-upload.md`.
+**The server implements the whole contract.** What is missing is named under `Open` in the
+two security pages: rate limiting, artifact signing, redirect re-validation, and a DNS-pinning
+fetch agent. No OAuth provider redirect is wired either, and there is no Dockerfile and no CI
+workflow — neither was asked for.
 
 Identity, authentication, the catalogue and the fleet are complete: register, sign in,
 publish a versioned jar, register a server, report an inventory, set a desired version, and
