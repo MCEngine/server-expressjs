@@ -7,6 +7,7 @@ import { createIdentityRepository, createIdentityService } from './modules/ident
 import { createAuthRepository, createAuthService } from './modules/auth/index.js';
 import { createProductRepository, createProductService } from './modules/product/index.js';
 import { createDiskStorage } from './storage/index.js';
+import { createFleetRepository, createFleetService } from './modules/fleet/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -35,11 +36,13 @@ const products = createProductService(
   systemClock,
 );
 
+const fleet = createFleetService(createFleetRepository(database.db), products, systemClock);
+
 const app = createApp({
   config,
   logger,
   probes: [databaseProbe(database)],
-  services: { identity, auth, products, storage },
+  services: { identity, auth, products, fleet, storage },
 });
 
 const server = app.listen(config.PORT, () => {

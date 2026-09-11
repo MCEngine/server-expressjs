@@ -7,6 +7,7 @@ import { createHealthRouter, type ReadinessProbe } from './routes/health.js';
 import { createIdentityRouter, type IdentityService } from './modules/identity/index.js';
 import { attachActor, createAuthRouter, type AuthService } from './modules/auth/index.js';
 import { createProductRouter, type ProductService } from './modules/product/index.js';
+import { createFleetRouter, type FleetService } from './modules/fleet/index.js';
 import type { Storage } from './storage/index.js';
 
 /**
@@ -20,6 +21,7 @@ export interface AppServices {
   readonly identity?: IdentityService;
   readonly auth?: AuthService;
   readonly products?: ProductService;
+  readonly fleet?: FleetService;
   readonly storage?: Storage;
 }
 
@@ -75,6 +77,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
 
   if (services.products !== undefined && services.identity !== undefined && services.storage !== undefined) {
     app.use('/api/v1', createProductRouter(services.products, services.identity, services.storage));
+  }
+
+  if (services.fleet !== undefined) {
+    app.use('/api/v1', createFleetRouter(services.fleet));
   }
 
   app.use(notFoundHandler);

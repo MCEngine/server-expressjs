@@ -46,15 +46,19 @@ there once, and this page links rather than repeats them.
 | `src/lib/zip.ts` | Reads a central directory. **Never decompresses.** |
 | `src/storage/` | Generated storage keys and the disk and memory drivers. |
 | `src/http/multipart.ts` | One-file multipart, capped while streaming. |
+| `src/modules/fleet/` | Registered servers, their inventory, and the desired-state payload. |
 | `src/http/params.ts` | Reads one route parameter as a string. Express 5 types them as `string \| string[]`. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |
 | `.env.example` | Copyable template; every key is in `wiki/environments/env.md`. |
 
 ## What is deliberately absent
 
-**There is no fleet.** Identity, authentication and the catalogue are complete: register,
-sign in, publish a versioned jar from the panel or from CI, download it with its checksum.
-Nothing yet answers a Minecraft server.
+**Nothing is logged.** `audit_events` and `fleet_events` exist in the schema and nothing
+writes to them. There is no external source resolver either.
+
+Identity, authentication, the catalogue and the fleet are complete: register, sign in,
+publish a versioned jar, register a server, report an inventory, set a desired version, and
+poll for the actions that close the gap.
 
 No rate limiting, though the contract specifies the limits, and no artifact signing — both
 are named in `wiki/security/artifact-upload.md` under `Open`. The disk storage driver is

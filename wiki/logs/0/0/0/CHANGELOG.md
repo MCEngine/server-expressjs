@@ -59,6 +59,9 @@ release, and is appended to as each task lands.
 - `src/http/multipart.ts` — a multipart reader that caps the file while streaming rather than
   after buffering it.
 - `wiki/security/artifact-upload.md` — the threat model for accepting and serving jars.
+- `src/modules/fleet/` — the control plane: servers identified by a generated key rather than
+  their URL, an inventory that is replaced rather than patched, and one `desired` payload
+  carrying every action with its checksum and download URL.
 
 ## Changed
 
