@@ -4,6 +4,7 @@ import { createLogger, type Logger } from './lib/logger.js';
 import { requestContext } from './http/requestContext.js';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler.js';
 import { createHealthRouter, type ReadinessProbe } from './routes/health.js';
+import { createMetaRouter } from './routes/meta.js';
 import { createIdentityRouter, type IdentityService } from './modules/identity/index.js';
 import { attachActor, createAuthRouter, type AuthService } from './modules/auth/index.js';
 import { createProductRouter, type ProductService } from './modules/product/index.js';
@@ -68,6 +69,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
   app.use(express.json({ limit: '1mb' }));
 
   app.use(createHealthRouter(probes));
+
+  // Public and unauthenticated: what it answers is a question you have before
+  // you have any credentials.
+  app.use('/api/v1', createMetaRouter(config));
 
   // Every domain route is under /api/v1. Health is not: an orchestrator probing
   // it should not have to track the API version.

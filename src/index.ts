@@ -5,6 +5,7 @@ import { createDatabase, databaseProbe, dialectTypes, migrateToLatest } from './
 import { systemClock } from './lib/clock.js';
 import { createIdentityRepository, createIdentityService } from './modules/identity/index.js';
 import { createAuthRepository, createAuthService } from './modules/auth/index.js';
+import { seedDemoAccount } from './modules/auth/demo.js';
 import { createProductRepository, createProductService } from './modules/product/index.js';
 import { createDiskStorage } from './storage/index.js';
 import { ensureWritableDirectory, writableDirectories } from './lib/writable.js';
@@ -40,6 +41,10 @@ const auth = createAuthService(
   config,
   systemClock,
 );
+
+// After migrations, because it writes rows; before listening, so the account is
+// there for the first request rather than the second.
+await seedDemoAccount(config, auth, logger);
 
 const storage = createDiskStorage(config.STORAGE_DIR);
 const products = createProductService(

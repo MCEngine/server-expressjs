@@ -119,6 +119,21 @@ becoming unreachable: an account must retain at least one of a password or an id
 Removing the owner is refused rather than cascaded. An org with no owner has no one who can
 delete it or transfer it, which is a state with no exit.
 
+## Meta
+
+| Method | Route | Auth | Notes |
+|---|---|---|---|
+| `GET` | `/meta` | none | What a client needs to know before it has credentials |
+
+```json
+{ "demo_account": { "email": "demo@mcengine.local", "password": "..." } }
+```
+
+`demo_account` is `null` unless `DEMO_ACCOUNT_ENABLED` is on. **The password is returned on
+purpose**: it is a credential the operator published by turning that flag on, and the sign-in
+page is what needs it. Printing it in a startup log while withholding it here would be theatre.
+What enabling it costs is in [`../environments/env.md`](../environments/env.md).
+
 ## Tokens
 
 | Method | Route | Auth | Notes |
