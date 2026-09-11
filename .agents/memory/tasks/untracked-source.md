@@ -52,9 +52,9 @@ Recorded in [`../decisions/gitignore-anchoring.md`](../decisions/gitignore-ancho
 
 | # | Title | Scope | Repository | Branch | Files / areas | PR |
 |---|---|---|---|---|---|---|
-| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/untracked-source-plan` | `.agents/memory/`, `.agents/index/` | |
-| 2 | Track the storage driver, and stop this recurring | The file, the patterns, the guard | `server-expressjs` | `fix/untracked-source` | `src/storage/`, `.gitignore`, `.dockerignore`, `test/` | |
-| 3 | Release | Logs, this table, the record closed | `server-expressjs` | `chore/untracked-source-release` | `wiki/logs/0/0/0/`, `.agents/` | |
+| 1 | Task record | This file, its decision, and the index rows | `server-expressjs` | `chore/untracked-source-plan` | `.agents/memory/`, `.agents/index/` | MCEngine/server-expressjs#21 |
+| 2 | Track the storage driver, and stop this recurring | The file, the patterns, the guard | `server-expressjs` | `fix/untracked-source` | `src/storage/`, `.gitignore`, `.dockerignore`, `test/` | MCEngine/server-expressjs#22 |
+| 3 | Release | Logs, this table, the record closed | `server-expressjs` | `chore/untracked-source-release` | `wiki/logs/0/0/0/`, `.agents/` | MCEngine/server-expressjs#23 |
 
 ## Entries
 
@@ -114,3 +114,22 @@ directory that already had the file; this one runs where the Docker build runs.
 
 Next task depends on: nothing. The release closes the record.
 
+### Task 3 — chore/untracked-source-release
+
+Filled the `PR` column, wrote this entry, and brought `repository-state.md` current.
+
+**The version did not move**, and neither did a line of the file this task was about.
+
+**The lesson is the deliverable, not the file.** Two consecutive tasks failed the same way: a
+check passed on a machine that had something the target environment did not — a compiler, then
+a file. Both times the check was honest about *what* it ran and silent about *where*.
+
+The guard added here closes one instance of that. The general form has no test: before calling
+something verified, name what the target environment has that this one does not, and check
+there. That is now the first thing `repository-state.md` says about verification.
+
+Next task depends on: nothing. This closes the record.
+
+## Status
+
+**Done.** All three tasks landed; the table above carries the pull request each merged through.
