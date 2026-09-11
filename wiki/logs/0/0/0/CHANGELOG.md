@@ -76,5 +76,11 @@ one that asks.
 
 ## Changed
 
+- **Publishing a version moved to `PUT /api/v1/products/:id/versions/:version`**, from
+  `POST /api/v1/products/:id/versions` with the version in the body. The product id is
+  globally unique, so `(product_id, version)` already addresses a version — and the three
+  routes that read, download and delete one already used that shape. A `version` field in the
+  body is now refused rather than ignored, so a URL and a body that disagree fail the build
+  instead of publishing the wrong one.
 - `README.md` rewritten from a bare title into an overview: what the service is, its place
   in the platform, and links into `wiki/`.

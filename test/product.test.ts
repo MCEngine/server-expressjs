@@ -42,9 +42,8 @@ describe('products', () => {
 
   const publish = (version: string, jar = bukkitJar(), token = access) =>
     request(s.app)
-      .post(`/api/v1/products/${productId}/versions`)
+      .put(`/api/v1/products/${productId}/versions/${version}`)
       .set('Authorization', `Bearer ${token}`)
-      .field('version', version)
       .attach('file', jar, `AcmeTools-${version}.jar`);
 
   beforeEach(async () => {
@@ -122,6 +121,59 @@ describe('products', () => {
       expect(res.body).toMatchObject({ version: '1.0.0', channel: 'release', is_latest: true });
       expect(res.body.file.sha256).toMatch(/^[0-9a-f]{64}$/);
       expect(res.body.file.name).toBe('AcmeTools-1.0.0.jar');
+    });
+
+    it('publishes to the same URL that reads the version back', async () => {
+      await seed();
+      const published = await publish('1.0.0');
+
+      // The point of the route change: one address for the resource, whichever
+      // verb is used. If these ever disagree, a permalink handed out by a
+      // publisher is not the one the service serves.
+      const read = await request(s.app).get(`/api/v1/products/${productId}/versions/1.0.0`);
+      expect(read.status).toBe(200);
+      expect(read.body.id).toBe(published.body.id);
+      expect(read.body.file.sha256).toBe(published.body.file.sha256);
+    });
+
+    it('refuses a version in the body, rather than ignoring it', async () => {
+      await seed();
+      const res = await request(s.app)
+        .put(`/api/v1/products/${productId}/versions/1.2.2`)
+        .set('Authorization', `Bearer ${access}`)
+        .field('version', '1.2.3')
+        .attach('file', bukkitJar(), 'AcmeTools-1.2.3.jar');
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('version_in_body');
+
+      // Nothing was published under either version, which is the failure this
+      // refusal exists to prevent: a URL saying 1.2.2 and a body saying 1.2.3
+      // would otherwise publish 1.2.2 and report success.
+      const rows = await s.db.db.selectFrom('product_versions').selectAll().execute();
+      expect(rows).toHaveLength(0);
+    });
+
+    it('refuses a path segment that is not a version', async () => {
+      await seed();
+      const res = await request(s.app)
+        .put(`/api/v1/products/${productId}/versions/latest`)
+        .set('Authorization', `Bearer ${access}`)
+        .attach('file', bukkitJar(), 'AcmeTools.jar');
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('validation_failed');
+    });
+
+    it('no longer accepts a POST to the version collection', async () => {
+      await seed();
+      const res = await request(s.app)
+        .post(`/api/v1/products/${productId}/versions`)
+        .set('Authorization', `Bearer ${access}`)
+        .field('version', '1.0.0')
+        .attach('file', bukkitJar(), 'AcmeTools-1.0.0.jar');
+
+      expect(res.status).toBe(404);
     });
 
     it('refuses a second upload of the same version', async () => {

@@ -72,3 +72,36 @@ closing entry says follow-up work opens a new record rather than appending. This
 record.
 
 Next task depends on: nothing beyond this record.
+
+### Task 2 — refactor/version-route
+
+`POST /products/:id/versions` became `PUT /products/:id/versions/:version`. The old route is
+gone rather than deprecated: nothing has shipped, and a removed route fails loudly where a
+deprecated one fails quietly six months later.
+
+**The version now comes from `pathParam(req, 'version')` and is validated by the same
+`versionSchema` as before**, so a path segment that is not version-like is
+`400 validation_failed` — which is also what stops `PUT /products/:id/versions/latest` from
+ever being a publish, without a special case for the word.
+
+**A `version` field in the body is `400 version_in_body`, even when it agrees with the path.**
+Refusing rather than ignoring is the whole point: a script whose URL says `1.2.2` while its
+body says `1.2.3` would otherwise publish `1.2.2` and report success. A test asserts both the
+code and that nothing was written under either version.
+
+**Nothing else moved.** `channel`, `changelog` and `compatibility` stay in the body because
+they are attributes of a version rather than part of its address; `requireScope('artifact:write')`
+plus the maintainer check, the nine ordered upload checks, `409 version_exists`, and
+`upload_source: 'ci'` for a token are all unchanged, and the existing tests for each still pass
+untouched apart from the URL they call.
+
+Propagated to the two documents that described the old route:
+`wiki/information/api-contract.md` (the route table, the publishing section, the rate-limit
+table) and `wiki/security/artifact-upload.md`, whose opening line names the upload path.
+
+Verified: `npm run check` green — 253 tests across fifteen suites, 4 of them new. The new ones
+hold the property the change exists for: publishing and reading return the same version id and
+the same checksum from the same URL; a body version is refused and writes nothing; a
+non-version path segment is refused; and a `POST` to the collection is now a 404.
+
+Next task depends on: the route. The panel is the only caller that publishes.

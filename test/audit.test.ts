@@ -101,9 +101,8 @@ describe('audit log', () => {
         kind: 'bukkit_plugin',
       });
     await request(s.app)
-      .post(`/api/v1/products/${product.body.id}/versions`)
+      .put(`/api/v1/products/${product.body.id}/versions/1.0.0`)
       .set('Authorization', `Bearer ${access}`)
-      .field('version', '1.0.0')
       .attach('file', bukkitJar(), 'Tools-1.0.0.jar');
     await request(s.app)
       .delete(`/api/v1/products/${product.body.id}`)

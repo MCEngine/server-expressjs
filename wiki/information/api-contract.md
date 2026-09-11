@@ -142,7 +142,7 @@ digest is stored.
 | `PUT` | `/products/:id/slug` | session, `admin`+ | `409 product_slug_cooldown` inside thirty days |
 | `DELETE` | `/products/:id` | session, `owner`/`admin` | Soft delete; body must repeat the slug |
 | `GET` | `/products/:id/versions` | optional | Newest first by `version_norm` |
-| `POST` | `/products/:id/versions` | session or `artifact:write` | Multipart; see below |
+| `PUT` | `/products/:id/versions/:version` | session or `artifact:write` | Multipart; publishes at the version's own address. See below |
 | `GET` | `/products/:id/versions/:version` | optional | |
 | `DELETE` | `/products/:id/versions/:version` | session, `maintainer`+ | |
 | `GET` | `/products/:id/versions/:version/download` | `artifact:read`, or none if public | Streams the jar |
@@ -158,9 +158,34 @@ against the API.
 
 ## Publishing a version
 
-`POST /products/:id/versions` — `multipart/form-data`, one `file` part plus JSON fields for
-`version`, `channel`, `changelog` and `compatibility`. Accepts a session from the panel or a
-token with `artifact:write` from CI; the two paths differ only in `product_files.upload_source`.
+`PUT /products/:id/versions/:version` — `multipart/form-data`, one `file` part plus fields for
+`channel`, `changelog` and `compatibility`. Accepts a session from the panel or a token with
+`artifact:write` from CI; the two paths differ only in `product_files.upload_source`.
+
+**A version is addressed by its path, in all four of its routes.** `products.id` is globally
+unique, so `(product_id, version)` fully addresses a version — which means the URL a publisher
+writes to is the URL that reads it back, downloads it, and deletes it:
+
+```
+PUT    /products/:id/versions/:version            publish
+GET    /products/:id/versions/:version            read
+GET    /products/:id/versions/:version/download   download
+DELETE /products/:id/versions/:version            delete
+```
+
+**`PUT`, because the client chooses the URI.** It is create-only rather than a replace: a
+published version is immutable, since the checksum in its payload is what every Minecraft
+server verifies its download against, so re-publishing one is `409 version_exists` — deliberate
+policy, not an unimplemented half of the method.
+
+**A `version` field in the body is refused with `400 version_in_body`**, even when it agrees
+with the path. Ignoring it would be the worse failure: a CI script whose URL says `1.2.2` while
+its body says `1.2.3` — one line updated and not the other — would publish `1.2.2` and report
+success. `channel`, `changelog` and `compatibility` stay in the body, because they are
+attributes of the version rather than part of its address.
+
+A path segment that is not version-like is `400 validation_failed`, which is also what keeps
+`PUT /products/:id/versions/latest` from ever being a publish.
 
 The upload is rejected unless **all** of the following hold. They are listed in the order the
 service applies them, cheapest first, because the point of the order is to reject a hostile
@@ -280,7 +305,7 @@ declared.**
 |---|---|
 | `POST /auth/login`, `/auth/register`, password reset | 10 per 15 minutes per IP, and per account |
 | `POST /tokens` | 20 per hour per account |
-| `POST /products/:id/versions` | 30 per hour per org |
+| `PUT /products/:id/versions/:version` | 30 per hour per org |
 | Downloads | 600 per hour per token |
 | `GET /fleet/servers/:id/desired` | 60 per hour per server |
 | Everything else | 1000 per hour per credential |
