@@ -68,7 +68,14 @@ const audit = createAuditService(database.db, systemClock, (error) => {
 
 const sources = createSourceService(database.db, storage, systemClock);
 const news = createNewsService(createNewsRepository(database.db), systemClock);
-const central = createCentralServices(database.db, systemClock);
+const central = createCentralServices(database.db, systemClock, {
+  brain: {
+    agentModel: config.CENTRAL_AGENT_MODEL,
+    embeddingModel: config.CENTRAL_EMBEDDING_MODEL,
+    apiUrl: config.CENTRAL_OPENROUTER_URL,
+    maxSteps: config.CENTRAL_AGENT_MAX_STEPS,
+  },
+});
 
 if (config.SERVER_API_TOKEN === undefined) {
   logger.info('central plugin routes are off: SERVER_API_TOKEN is not set');

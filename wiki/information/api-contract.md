@@ -71,6 +71,7 @@ is documented per code.
 | `413` | Upload exceeds `max_file_bytes` |
 | `422` | The upload is not a valid jar for the product's `kind` |
 | `429` | Rate limited; `Retry-After` is always set |
+| `502` | An AI API the [central brain](central-api.md#the-central-brain--apimcagentsask_global) called for the caller failed or refused |
 | `507` | The org's storage quota would be exceeded |
 
 `409` covers cooldowns rather than `403` deliberately: the caller *may* perform the action,

@@ -100,6 +100,21 @@ const schema = z.object({
     .optional()
     .transform((value) => (value === undefined || value.trim() === '' ? undefined : value.trim()))
     .pipe(z.string().min(16).optional()),
+
+  /**
+   * The central brain behind MCAgents' `ask_global`. It spends the key the
+   * caller sends with each question and keeps none, so these are only which
+   * model thinks, which model embeds a search, where the OpenAI-compatible API
+   * is, and how many tool rounds one question may take.
+   */
+  CENTRAL_AGENT_MODEL: z.string().min(1).default('openrouter/free'),
+  CENTRAL_EMBEDDING_MODEL: z
+    .string()
+    .min(1)
+    .default('openai/text-embedding-3-small')
+    .transform((value) => value.toLowerCase()),
+  CENTRAL_OPENROUTER_URL: z.string().url().default('https://openrouter.ai/api/v1'),
+  CENTRAL_AGENT_MAX_STEPS: z.coerce.number().int().min(1).max(20).default(5),
 });
 
 export type Config = Readonly<z.infer<typeof schema>>;

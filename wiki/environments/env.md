@@ -50,6 +50,10 @@ transactions across the shapes the schema uses, so it is not one more dialect. S
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `SERVER_API_TOKEN` | string, ≥ 16 chars | unset | The shared secret every plugin's `central_server.token` carries. **Unset or empty turns the [central plugin routes](../information/central-api.md) off.** |
+| `CENTRAL_AGENT_MODEL` | string | `openrouter/free` | The model the central brain thinks with when a question names none |
+| `CENTRAL_EMBEDDING_MODEL` | string | `openai/text-embedding-3-small` | Lower-cased. What searches are embedded with; must match the model MCLog embeds with |
+| `CENTRAL_OPENROUTER_URL` | URL | `https://openrouter.ai/api/v1` | The OpenAI-compatible API the brain calls |
+| `CENTRAL_AGENT_MAX_STEPS` | integer 1–20 | `5` | Tool rounds one question may take; the last always answers |
 
 ## Storage and origins
 

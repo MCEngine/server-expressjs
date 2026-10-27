@@ -97,3 +97,13 @@ Migration `006-central-network-data` and four new route families, each designed 
 their plugins had no central client yet: `/api/mcmembership`, `/api/mcagents-chat`,
 `/api/mcpackage` (per server id, project id in the body) and `/api/mclog` (logs, embeddings,
 cosine search). `src/lib/vectors.ts` holds the cosine and top-k the brain reuses.
+
+### Task 6 — feat/central-brain
+
+`POST /api/mcagents/ask_global` and the knowledge pages, in `src/modules/central/brain/`: an
+OpenAI-compatible client over `fetch` (redirects refused), a service looping over two tools
+(`search_knowledge` across knowledge pages and MCLog's log; `web_search` through OpenRouter's web
+plugin) for at most `CENTRAL_AGENT_MAX_STEPS`, the last round without tools. Migration
+`007-central-knowledge`, four `CENTRAL_*` env keys, and `errors.badGateway` for an upstream
+failure. A caller-chosen `api_url` goes through `assertFetchable`. The caller's key is never
+stored.

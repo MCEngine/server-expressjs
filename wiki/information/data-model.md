@@ -492,6 +492,13 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 | `mclog_logs` | auto-numbered `id` | |
 | `mclog_embeddings` | (`log_id`, `model_name`) | → logs, cascade. The vector is JSON text; similarity is computed in the application, so no engine needs a vector type |
 
+### The central brain
+
+| Table | Key | Notes |
+|---|---|---|
+| `mcagents_knowledge` | auto-numbered `id` | Pages the brain searches: `title`, `content`, `source` |
+| `mcagents_knowledge_embeddings` | (`knowledge_id`, `model_name`) | → knowledge, cascade. JSON vector |
+
 ## What the schema enforces on its own
 
 The rules below are constraints, not handler code, because a rule that lives only in a
