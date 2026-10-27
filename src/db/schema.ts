@@ -357,6 +357,74 @@ export interface McidentityCosmeticsTable {
   updated_at: Timestamp;
 }
 
+export interface MceconomyAccountsTable {
+  account_type: string;
+  account_uuid: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface MceconomyCurrenciesTable {
+  id: Serial;
+  system_code: string;
+  display_name: string;
+  is_transferable: Bool;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface MceconomyWalletsTable {
+  account_type: string;
+  account_uuid: string;
+  currency_id: number;
+  amount: number;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface MceconomyLogsTable {
+  id: Serial;
+  account_type: string;
+  account_uuid: string;
+  scope: string;
+  currency_id: number;
+  amount: number;
+  transaction_uuid: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  created_at: Timestamp;
+}
+
+export interface MarketItemsTable {
+  market_name: string;
+  item_index: number;
+  metadata: string | null;
+  buy_price: number;
+  sell_price: number;
+  currency: string;
+  amount: number;
+}
+
+export interface SlayerrewardsKillsTable {
+  id: Serial;
+  player_uuid: string;
+  mob_type: string;
+  world: string | null;
+  x: number;
+  y: number;
+  z: number;
+  created_at: Timestamp;
+}
+
+export interface SlayerrewardsRewardsTable {
+  id: Serial;
+  player_uuid: string;
+  mob_type: string;
+  currency: string;
+  amount: number;
+  created_at: Timestamp;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -391,6 +459,13 @@ export interface Database {
   mcidentity_equipped_skills: McidentityEquippedTable;
   mcidentity_equipped_runes: McidentityEquippedTable;
   mcidentity_cosmetics: McidentityCosmeticsTable;
+  mceconomy_accounts: MceconomyAccountsTable;
+  mceconomy_currencies: MceconomyCurrenciesTable;
+  mceconomy_wallets: MceconomyWalletsTable;
+  mceconomy_logs: MceconomyLogsTable;
+  market_items: MarketItemsTable;
+  slayerrewards_kills: SlayerrewardsKillsTable;
+  slayerrewards_rewards: SlayerrewardsRewardsTable;
 }
 
 export type Account = Selectable<AccountsTable>;

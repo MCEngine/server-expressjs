@@ -5,6 +5,7 @@ import type { DialectTypes } from './types.js';
 import { migration001Initial } from './migrations/001-initial.js';
 import { migration002News } from './migrations/002-news.js';
 import { migration003CentralIdentity } from './migrations/003-central-identity.js';
+import { migration004CentralEconomy } from './migrations/004-central-economy.js';
 
 /**
  * The migrations, in order, as a literal list.
@@ -19,6 +20,7 @@ export function migrations(types: DialectTypes): Record<string, Migration> {
     '001-initial': migration001Initial(types),
     '002-news': migration002News(types),
     '003-central-identity': migration003CentralIdentity(types),
+    '004-central-economy': migration004CentralEconomy(types),
   };
 }
 

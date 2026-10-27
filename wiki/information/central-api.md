@@ -34,6 +34,7 @@ is mounted at the prefix its released client already calls, rather than under `/
 | Plugin | Prefix | Style |
 |---|---|---|
 | MCIdentity, MCIdentitySkill, MCIdentityRune, MCIdentityCosmetic | `/v1` | REST, camelCase fields |
+| MCEconomy, Market, SlayerRewards | `/api/economy` | One `POST` per plugin, the operation named by `action`, snake_case fields |
 
 Errors use the [same envelope](api-contract.md#errors) as the rest of the service. A schema
 rejection is `400 validation_failed` with the failing fields.
@@ -70,3 +71,41 @@ Reads answer `404` when there is nothing to read; the client turns that into its
 | `PUT` | `/v1/identities/:uuid/runes/:slot` | `{runeCode}`, `null` clears | |
 | `GET` | `/v1/identities/:uuid/cosmetics` | | `{skin, aura}`, both `null` when nothing is saved |
 | `PUT` | `/v1/identities/:uuid/cosmetics` | `{skin}` and/or `{aura}` | A field left out is kept; a field sent as `null` is cleared |
+
+## MCEconomy, Market and SlayerRewards — `/api/economy`
+
+One endpoint per plugin. The body names the operation in `action`; an action the server does
+not know is `400 unknown_action`, with the known ones in `details.known`. Money is a Java `long`
+and travels as a **string** both ways. A value a JavaScript number cannot hold exactly (past
+2^53) is refused with `400` rather than rounded.
+
+### `POST /api/economy` — MCEconomy
+
+| `action` | Fields | Answer |
+|---|---|---|
+| `create_account` | `account_type`, `account_uuid` | `{account}`; an existing account is returned as it is |
+| `get_account` | `account_type`, `account_uuid` | `{account}`, `null` when there is none |
+| `create_currency` | `system_code`, `display_name`, `is_transferable` | `{currency}` with its numeric `id`; a known code has its name and flag updated |
+| `get_currencies` | | `{currencies: [...]}` |
+| `get_wallet` | `account_type`, `account_uuid`, `currency_id` | `{wallet}`, opened at `"0"` (with its account) the first time; `404 currency_not_found` |
+| `set_wallet` | the same and `amount` | `{wallet}` |
+| `insert_log` | `account_type`, `account_uuid`, `scope`, `currency_id`, `amount`, `transaction_uuid`, `reference_type`, `reference_id` | `{success: true}` |
+
+### `POST /api/economy/market` — Market
+
+| `action` | Fields | Answer |
+|---|---|---|
+| `save_item` | `market_name`, `item_index`, `metadata`, `buy_price`, `sell_price`, `currency`, `amount` | `{success: true}`; replaces the item at that index |
+| `get_item` | `market_name`, `item_index` | `{item}`, `null` when there is none |
+| `get_items` | `market_name` | `{items}`, by index |
+| `list_markets` | | `{markets}`, by name |
+| `delete_item` | `market_name`, `item_index` | `{success}`: whether there was one to delete |
+
+### `POST /api/economy/slayerrewards` — SlayerRewards
+
+| `action` | Fields | Answer |
+|---|---|---|
+| `log_kill` | `player_uuid`, `mob_type`, `world`, `x`, `y`, `z` | `{success: true}` |
+| `log_reward` | `player_uuid`, `mob_type`, `currency`, `amount` | `{success: true}` |
+| `get_kills` | `player_uuid`, `limit` (1–1000) | `{kills}`, newest first |
+| `get_rewards` | `player_uuid`, `limit` (1–1000) | `{rewards}`, newest first |
