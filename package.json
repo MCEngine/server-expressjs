@@ -1,6 +1,6 @@
 {
   "name": "@mcengine/server-expressjs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Central server for MCPluginManager: account namespaces, the artifact catalogue, scoped tokens, and the fleet control plane.",
   "license": "MIT",
   "type": "module",

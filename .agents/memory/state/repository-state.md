@@ -7,7 +7,16 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
-## As of the 0.0.0 pre-release
+## As of 0.1.0
+
+**The central server for every MCEngine-family plugin ships in 0.1.0.** With `SERVER_API_TOKEN`
+set, `src/modules/central/` serves the routes each plugin's `common.central` client calls — the
+MCIdentity family under `/v1`, the economy family under `/api/economy`, and `/api/mcagents`,
+`/api/mcmembership`, `/api/mcagents-chat`, `/api/mcpackage`, `/api/mclog` — plus the
+`ask_global` brain and its knowledge store. The contract is `wiki/information/central-api.md`;
+the plan and its entries are `../tasks/central-plugins.md`. Unset, none of it is mounted.
+
+## Before 0.1.0
 
 `MCEngine/server-expressjs` is a **Mode B consumer** of the shared instruction set served by
 the `lxagents-agents-base` connector. It declares no overrides.
@@ -18,7 +27,7 @@ the `lxagents-agents-base` connector. It declares no overrides.
 `wiki/information/api-contract.md`, `wiki/logs/0/0/0/CHANGELOG.md`, `README.md`, and
 `LICENSE` (MIT, MCEngine, 2026 — already present, not written by the setup).
 
-Plus the runtime: `package.json` (`@mcengine/server-expressjs` at `0.0.0`), `tsconfig.json`
+Plus the runtime: `package.json` (`@mcengine/server-expressjs`, now at `0.1.0`), `tsconfig.json`
 and `tsconfig.build.json`, `vitest.config.ts`, `.gitignore`, `.env.example`,
 `package-lock.json`, `src/` and `test/`, and `wiki/environments/{setup,env}.md`.
 
@@ -132,7 +141,7 @@ SIGTERM.
 
 ## Next step
 
-**Nine plans are finished and all nine records are closed.** The twenty-task platform plan
+**Ten plans are finished; `../tasks/central-plugins.md` is closed for this repository.** The twenty-task platform plan
 (`../tasks/mcpluginmanager-platform.md`, whose table is in `MCEngine/plugin-manager`), the
 version-route plan (`../tasks/version-route.md`, whose table is here), which moved publishing
 to `PUT /api/v1/products/:id/versions/:version`, the container-image plan
@@ -153,4 +162,4 @@ public key; an OAuth provider redirect, since linking and signing in already wor
 and it is what `PANEL_ORIGIN` is reserved for, the one variable this service validates and never
 reads (`../decisions/no-cors-layer.md`);
 and a CI workflow that builds and pushes the image the Dockerfile now
-defines. A first shipping version is a version claim and therefore asks first.
+defines. `0.1.0` shipped the central server; the next version is again a version claim.
