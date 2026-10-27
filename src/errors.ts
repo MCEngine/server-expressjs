@@ -86,6 +86,10 @@ export const errors = {
       retry_after_seconds: retryAfterSeconds,
     }),
 
+  /** A service this one called on the caller's behalf failed or refused. */
+  badGateway: (code: string, message: string, details?: Record<string, unknown>) =>
+    new ApiError(502, code, message, details),
+
   /** The org's storage quota would be exceeded by this write. */
   insufficientStorage: (code: string, message: string, details?: Record<string, unknown>) =>
     new ApiError(507, code, message, details),

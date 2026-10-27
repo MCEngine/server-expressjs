@@ -187,3 +187,39 @@ stored. Search ranks every log embedded with the same model by cosine similarity
 | `GET` | `/logs/count` | | `{count}` |
 | `PUT` | `/logs/:id/embeddings` | `{model_name, embedding: [numbers]}` | `204`; `404 log_not_found` |
 | `POST` | `/logs/search` | `{model_name, embedding, limit}` | `{matches: [{id, contents, created_at, similarity}]}`, best first |
+
+## The central brain — `/api/mcagents/ask_global`
+
+MCAgents' `ask_global` tool hands a question to an agent that runs **here**, separate from the
+one on the game server. Two brains: the game server's agent keeps its own manager, workers and
+tools, and only asks this one what needs the whole network or the web.
+
+The brain has two tools of its own:
+
+| Tool | What it does |
+|---|---|
+| `search_knowledge` | Embeds the query with `CENTRAL_EMBEDDING_MODEL` and ranks the knowledge pages below **and** MCLog's network-wide log by cosine similarity |
+| `web_search` | Asks the model again with OpenRouter's web plugin on, and keeps the pages it cites |
+
+It loops for at most `CENTRAL_AGENT_MAX_STEPS` rounds; the last round offers no tools, so a
+question always ends in an answer.
+
+**The caller's key pays, and is never stored.** Every call — thinking, embedding, searching —
+spends the `token` in the request: the player's own OpenRouter key, or the server's. It is used
+for that request and written nowhere.
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `POST` | `/api/mcagents/ask_global` | `{question, token, model?, api_url?}` | `{answer, sources: [{type, title, ref}], model, steps, total_tokens}` |
+| `POST` | `/api/mcagents/knowledge` | `{title, content, source?, token, api_url?}` | `201` and the page; embedded once with the caller's key |
+| `GET` | `/api/mcagents/knowledge` | `?limit` | `{knowledge}`, newest first |
+| `DELETE` | `/api/mcagents/knowledge/:id` | | `204` |
+
+`model` defaults to `CENTRAL_AGENT_MODEL`. `api_url` points the brain at another
+OpenAI-compatible API, for a key that belongs to one: anything but `CENTRAL_OPENROUTER_URL` must
+be `https` on a public address, or the request is `400 unsafe_api_url`, because this server would
+otherwise call wherever it was told. Redirects are never followed. A failure of the AI API is
+`502 ai_api_failed`, with the API's own reason.
+
+Searches only find what was embedded with the same model, so MCLog's `agents.embeddings` model
+and `CENTRAL_EMBEDDING_MODEL` must agree for the brain to see the log.

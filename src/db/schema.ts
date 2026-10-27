@@ -529,6 +529,21 @@ export interface MclogEmbeddingsTable {
   embedding: string;
 }
 
+export interface McagentsKnowledgeTable {
+  id: Serial;
+  title: string;
+  content: string;
+  source: string | null;
+  created_at: Timestamp;
+}
+
+export interface McagentsKnowledgeEmbeddingsTable {
+  knowledge_id: number;
+  model_name: string;
+  /** A JSON array of numbers. */
+  embedding: string;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -582,6 +597,8 @@ export interface Database {
   mcpackage_packages: McpackagePackagesTable;
   mclog_logs: MclogLogsTable;
   mclog_embeddings: MclogEmbeddingsTable;
+  mcagents_knowledge: McagentsKnowledgeTable;
+  mcagents_knowledge_embeddings: McagentsKnowledgeEmbeddingsTable;
 }
 
 export type Account = Selectable<AccountsTable>;
