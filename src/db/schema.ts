@@ -479,6 +479,56 @@ export interface McagentsPromptsTable {
   updated_at: Timestamp;
 }
 
+export interface McmembershipMembershipsTable {
+  account_type: string;
+  account_uuid: string;
+  type: string;
+  ended_at: string | null;
+  updated_at: Timestamp;
+}
+
+export interface McmembershipArchivedTable {
+  id: Serial;
+  account_type: string;
+  account_uuid: string;
+  type: string;
+  ended_at: string | null;
+  archived_at: Timestamp;
+}
+
+export interface McagentschatSessionsTable {
+  session_id: string;
+  mode: string;
+  model_id: string;
+  turns: string;
+  total_tokens: number;
+  updated_at: Timestamp;
+}
+
+export interface McpackagePackagesTable {
+  server_id: string;
+  platform: string;
+  project_id: string;
+  version_id: string;
+  version: string;
+  file_name: string;
+  installed_time: string;
+  updated_at: Timestamp;
+}
+
+export interface MclogLogsTable {
+  id: Serial;
+  contents: string;
+  created_at: Timestamp;
+}
+
+export interface MclogEmbeddingsTable {
+  log_id: number;
+  model_name: string;
+  /** A JSON array of numbers. */
+  embedding: string;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -526,6 +576,12 @@ export interface Database {
   mcagents_sessions: McagentsSessionsTable;
   mcagents_logs: McagentsLogsTable;
   mcagents_prompts: McagentsPromptsTable;
+  mcmembership_memberships: McmembershipMembershipsTable;
+  mcmembership_archived: McmembershipArchivedTable;
+  mcagentschat_sessions: McagentschatSessionsTable;
+  mcpackage_packages: McpackagePackagesTable;
+  mclog_logs: MclogLogsTable;
+  mclog_embeddings: MclogEmbeddingsTable;
 }
 
 export type Account = Selectable<AccountsTable>;

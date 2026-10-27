@@ -90,3 +90,10 @@ Migration `005-central-mcagents` (`mcagents_*`) and the `/api/mcagents` routes t
 `MCAgentsAPI` client calls. Creating a platform is find-or-create by name, because every server
 asks for `openrouter` on start. `src/db/serial.ts` adds `insertSerial`, which asks the adapter
 whether it supports `RETURNING` so a new row's numeric id is portable to MySQL.
+
+### Task 5 — feat/central-network-data
+
+Migration `006-central-network-data` and four new route families, each designed here because
+their plugins had no central client yet: `/api/mcmembership`, `/api/mcagents-chat`,
+`/api/mcpackage` (per server id, project id in the body) and `/api/mclog` (logs, embeddings,
+cosine search). `src/lib/vectors.ts` holds the cosine and top-k the brain reuses.

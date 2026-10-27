@@ -481,6 +481,17 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 | `mcagents_logs` | auto-numbered `id` | Chat transcripts; indexed by account and `id` |
 | `mcagents_prompts` | (`account_type`, `account_uuid`, `prompt_id`) | Saved prompts and the tools they may use |
 
+### MCMembership, MCAgentsChat, MCPackage and MCLog
+
+| Table | Key | Notes |
+|---|---|---|
+| `mcmembership_memberships` | (`account_type`, `account_uuid`, `type`) | `ended_at` `NULL` never ends; served as `ended_time` |
+| `mcmembership_archived` | auto-numbered `id` | Where an archived membership goes |
+| `mcagentschat_sessions` | `session_id` | `turns` is a JSON array of `{role, content}` |
+| `mcpackage_packages` | (`server_id`, `platform`, `project_id`) | `installed_time` is free text as the plugin recorded it |
+| `mclog_logs` | auto-numbered `id` | |
+| `mclog_embeddings` | (`log_id`, `model_name`) | → logs, cascade. The vector is JSON text; similarity is computed in the application, so no engine needs a vector type |
+
 ## What the schema enforces on its own
 
 The rules below are constraints, not handler code, because a rule that lives only in a
