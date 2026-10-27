@@ -47,13 +47,13 @@ OpenRouter key; it is used for that request and never written down.
 
 | # | Title | Repository | Branch | PR |
 |---|---|---|---|---|
-| 1 | Task record | `server-expressjs` | `chore/central-plugins-plan` | |
-| 2 | Shared-secret guard, MCIdentity family routes | `server-expressjs` | `feat/central-identity` | |
-| 3 | Economy, Market and SlayerRewards routes | `server-expressjs` | `feat/central-economy` | |
-| 4 | MCAgents data routes | `server-expressjs` | `feat/central-mcagents` | |
-| 5 | Membership, chat sessions, package state, MCLog store | `server-expressjs` | `feat/central-network-data` | |
-| 6 | The brain: `ask_global` and the knowledge store | `server-expressjs` | `feat/central-brain` | |
-| 7 | Release 0.1.0 | `server-expressjs` | `release/0.1.0` | |
+| 1 | Task record | `server-expressjs` | `chore/central-plugins-plan` | #44 |
+| 2 | Shared-secret guard, MCIdentity family routes | `server-expressjs` | `feat/central-identity` | #45 |
+| 3 | Economy, Market and SlayerRewards routes | `server-expressjs` | `feat/central-economy` | #46 |
+| 4 | MCAgents data routes | `server-expressjs` | `feat/central-mcagents` | #47 |
+| 5 | Membership, chat sessions, package state, MCLog store | `server-expressjs` | `feat/central-network-data` | #48 |
+| 6 | The brain: `ask_global` and the knowledge store | `server-expressjs` | `feat/central-brain` | #49 |
+| 7 | Release 0.1.0 | `server-expressjs` | `release/0.1.0` | #50 |
 | 8 | `common.central`, `ask_global`, release 6.6.0 | `MCPaimon/mcagents` | `feat/central-package`, `feat/ask-global`, `release/6.6.0` | |
 | 9 | Central chat sessions, release 0.5.0 | `MCPaimon/mcagents-chat` | `feat/central-sessions`, `release/0.5.0` | |
 | 10 | Central membership backend, release 1.5.0 | `MCNaberius/mcmembership` | `feat/central-backend`, `release/1.5.0` | |
@@ -107,3 +107,10 @@ plugin) for at most `CENTRAL_AGENT_MAX_STEPS`, the last round without tools. Mig
 `007-central-knowledge`, four `CENTRAL_*` env keys, and `errors.badGateway` for an upstream
 failure. A caller-chosen `api_url` goes through `assertFetchable`. The caller's key is never
 stored.
+
+### Task 7 — release/0.1.0
+
+`version` 0.0.0 → 0.1.0 in `package.json` and `package-lock.json`, `wiki/logs/0/1/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and `.agents/memory/state/repository-state.md`
+updated for the central server. This closes the server-expressjs half of the plan (tasks 1–7);
+tasks 8–12 land in their own repositories against these routes.

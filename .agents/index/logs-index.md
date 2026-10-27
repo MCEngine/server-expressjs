@@ -23,4 +23,5 @@ the same commit.
 
 | Version | Summary | Files |
 |---|---|---|
+| [`0/1/0`](../../wiki/logs/0/1/0/CHANGELOG.md) | The central server for every plugin: shared-secret routes for the MCIdentity family, economy, MCAgents, membership, chat, packages and MCLog, and the `ask_global` brain. | `CHANGELOG.md` |
 | [`0/0/0`](../../wiki/logs/0/0/0/CHANGELOG.md) | Pre-release. The agent instruction system, and the central server built up task by task. | `CHANGELOG.md` |
