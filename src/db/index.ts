@@ -2,6 +2,7 @@ export { createDatabase, type DatabaseHandle } from './dialect.js';
 export { migrateToLatest, migrations } from './migrator.js';
 export { dialectTypes, type DialectTypes, type SqlProvider } from './types.js';
 export type * from './schema.js';
+export { insertSerial } from './serial.js';
 
 import type { DatabaseHandle } from './dialect.js';
 import type { ReadinessProbe } from '../routes/health.js';

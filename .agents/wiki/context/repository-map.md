@@ -39,6 +39,7 @@ there once, and this page links rather than repeats them.
 | `src/db/plugins.ts` | Normalizes driver results; rewrites booleans for SQLite. |
 | `src/db/migrator.ts` | The migration list, as a literal. |
 | `src/db/migrations/` | One file per migration. Never edited after shipping. |
+| `src/db/serial.ts` | `insertSerial`: a new row's auto-numbered id, through `RETURNING` or the insert id, whichever the engine has. |
 | `src/lib/clock.ts` | Injected time, so a cooldown boundary is testable. |
 | `src/modules/identity/` | Accounts, profiles, handles, emails, orgs, membership, settings. |
 | `src/modules/auth/` | scrypt passwords, OAuth identities, per-device sessions, scoped API tokens, and the guards. |
