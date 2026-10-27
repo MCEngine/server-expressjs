@@ -35,6 +35,7 @@ is mounted at the prefix its released client already calls, rather than under `/
 |---|---|---|
 | MCIdentity, MCIdentitySkill, MCIdentityRune, MCIdentityCosmetic | `/v1` | REST, camelCase fields |
 | MCEconomy, Market, SlayerRewards | `/api/economy` | One `POST` per plugin, the operation named by `action`, snake_case fields |
+| MCAgents | `/api/mcagents` | REST, snake_case fields, keys in the query string on reads |
 
 Errors use the [same envelope](api-contract.md#errors) as the rest of the service. A schema
 rejection is `400 validation_failed` with the failing fields.
@@ -109,3 +110,33 @@ and travels as a **string** both ways. A value a JavaScript number cannot hold e
 | `log_reward` | `player_uuid`, `mob_type`, `currency`, `amount` | `{success: true}` |
 | `get_kills` | `player_uuid`, `limit` (1–1000) | `{kills}`, newest first |
 | `get_rewards` | `player_uuid`, `limit` (1–1000) | `{rewards}`, newest first |
+
+## MCAgents — `/api/mcagents`
+
+Rows come back as the plugin's own backends store them, snake_case. A lookup that finds nothing
+is `404`, which the client reads as "none". An account is (`account_type`, `account_uuid`):
+`player`, `guild` or `server` and an id of up to 64 characters.
+
+| Method | Path | Body or query | Answer |
+|---|---|---|---|
+| `POST` | `/platforms` | `{display_name, url}` | The platform. **Find or create**: every server on a network asks for `openrouter` on start, and the second one gets the first one's row |
+| `GET` | `/platforms` | | `[platform]` |
+| `GET` | `/platforms/:id` | | `{id, display_name, url, created_at, updated_at}` |
+| `POST` | `/models` | `{platform_id, model_id}` | The model, registered once |
+| `GET` | `/models` | `?platform_id` | `[model]` |
+| `GET` | `/models/find` | `?platform_id&model_id` | `{platform_id, model_id, …}` |
+| `POST` | `/accounts` | `{account_type, account_uuid, platform_id, token}` | The account; a second save replaces the token |
+| `GET` | `/accounts` | `?account_type&account_uuid&platform_id` | The account |
+| `DELETE` | `/accounts` | `?account_type&account_uuid` | `204`; every platform's key for that account |
+| `POST` | `/sessions` | `{account_type, account_uuid, platform_id, model_id}` | `204`; the account's one active model |
+| `GET` | `/sessions` | `?account_type&account_uuid` | The session |
+| `POST` | `/logs` | `{account_type, account_uuid, platform_id, model_id, chat_history, token_total_usage}` | `201` and the log with its numeric `id` |
+| `GET` | `/logs` | `?account_type&account_uuid&limit` | Newest first; `limit` 1–500, default 20 |
+| `POST` | `/prompts` | `{account_type, account_uuid, prompt_id, prompt, tools}` | The stored prompt; an id that exists is left as it is |
+| `GET` | `/prompts/find` | `?account_type&account_uuid&prompt_id` | The prompt |
+| `GET` | `/prompts` | `?account_type&account_uuid` | By `prompt_id` |
+| `PUT` | `/prompts/tools` | `{account_type, account_uuid, prompt_id, tools}` | The prompt |
+| `DELETE` | `/prompts` | `?account_type&account_uuid&prompt_id` | `204` |
+
+**The `token` column is never a usable key.** MCAgents encrypts every stored key with its own
+`token.secret` before it leaves the game server, so this table holds ciphertext only.

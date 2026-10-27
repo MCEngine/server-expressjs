@@ -5,6 +5,7 @@ import type { Clock } from '../../lib/clock.js';
 import { requireServerToken } from './guard.js';
 import { createCentralIdentityRepository, createCentralIdentityRouter, type CentralIdentityRepository } from './identity/index.js';
 import { createCentralEconomyRepository, createCentralEconomyRouter, type CentralEconomyRepository } from './economy/index.js';
+import { createCentralMcagentsRepository, createCentralMcagentsRouter, type CentralMcagentsRepository } from './mcagents/index.js';
 
 export { requireServerToken } from './guard.js';
 
@@ -16,6 +17,7 @@ export interface CentralServices {
   readonly clock: Clock;
   readonly identity: CentralIdentityRepository;
   readonly economy: CentralEconomyRepository;
+  readonly mcagents: CentralMcagentsRepository;
 }
 
 export function createCentralServices(db: Kysely<Database>, clock: Clock): CentralServices {
@@ -23,6 +25,7 @@ export function createCentralServices(db: Kysely<Database>, clock: Clock): Centr
     clock,
     identity: createCentralIdentityRepository(db),
     economy: createCentralEconomyRepository(db),
+    mcagents: createCentralMcagentsRepository(db),
   };
 }
 
@@ -38,4 +41,5 @@ export function mountCentral(app: Express, central: CentralServices, secret: str
   const guard = requireServerToken(secret);
   app.use('/v1', guard, createCentralIdentityRouter(central.identity, central.clock));
   app.use('/api/economy', guard, createCentralEconomyRouter(central.economy, central.clock));
+  app.use('/api/mcagents', guard, createCentralMcagentsRouter(central.mcagents, central.clock));
 }

@@ -470,6 +470,17 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 | `market_items` | (`market_name`, `item_index`) | Prices are `bigint`; `-1` means "not for sale" in the plugin |
 | `slayerrewards_kills`, `slayerrewards_rewards` | auto-numbered `id` | Indexed by (`player_uuid`, `id`) for "newest first" |
 
+### MCAgents
+
+| Table | Key | Notes |
+|---|---|---|
+| `mcagents_platforms` | auto-numbered `id` | `display_name` unique |
+| `mcagents_models` | (`platform_id`, `model_id`) | → platforms, cascade |
+| `mcagents_accounts` | (`account_type`, `account_uuid`, `platform_id`) | → platforms, cascade. `token` is ciphertext the plugin encrypted |
+| `mcagents_sessions` | (`account_type`, `account_uuid`) | The selected model |
+| `mcagents_logs` | auto-numbered `id` | Chat transcripts; indexed by account and `id` |
+| `mcagents_prompts` | (`account_type`, `account_uuid`, `prompt_id`) | Saved prompts and the tools they may use |
+
 ## What the schema enforces on its own
 
 The rules below are constraints, not handler code, because a rule that lives only in a

@@ -425,6 +425,60 @@ export interface SlayerrewardsRewardsTable {
   created_at: Timestamp;
 }
 
+export interface McagentsPlatformsTable {
+  id: Serial;
+  display_name: string;
+  url: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McagentsModelsTable {
+  platform_id: number;
+  model_id: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McagentsAccountsTable {
+  account_type: string;
+  account_uuid: string;
+  platform_id: number;
+  token: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McagentsSessionsTable {
+  account_type: string;
+  account_uuid: string;
+  platform_id: number;
+  model_id: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McagentsLogsTable {
+  id: Serial;
+  account_type: string;
+  account_uuid: string;
+  platform_id: number;
+  model_id: string;
+  chat_history: string;
+  token_total_usage: number;
+  created_at: Timestamp;
+}
+
+export interface McagentsPromptsTable {
+  account_type: string;
+  account_uuid: string;
+  prompt_id: string;
+  prompt: string;
+  tools: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -466,6 +520,12 @@ export interface Database {
   market_items: MarketItemsTable;
   slayerrewards_kills: SlayerrewardsKillsTable;
   slayerrewards_rewards: SlayerrewardsRewardsTable;
+  mcagents_platforms: McagentsPlatformsTable;
+  mcagents_models: McagentsModelsTable;
+  mcagents_accounts: McagentsAccountsTable;
+  mcagents_sessions: McagentsSessionsTable;
+  mcagents_logs: McagentsLogsTable;
+  mcagents_prompts: McagentsPromptsTable;
 }
 
 export type Account = Selectable<AccountsTable>;

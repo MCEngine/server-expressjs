@@ -83,3 +83,10 @@ Migration `004-central-economy` (`mceconomy_*`, `market_items`, `slayerrewards_*
 endpoints under `/api/economy`. Upserts are select-then-write inside a transaction, never
 `onConflict`, because MySQL spells it differently. Money travels as a string and anything a JS
 number would round is refused.
+
+### Task 4 — feat/central-mcagents
+
+Migration `005-central-mcagents` (`mcagents_*`) and the `/api/mcagents` routes the released
+`MCAgentsAPI` client calls. Creating a platform is find-or-create by name, because every server
+asks for `openrouter` on start. `src/db/serial.ts` adds `insertSerial`, which asks the adapter
+whether it supports `RETURNING` so a new row's numeric id is portable to MySQL.
