@@ -51,6 +51,7 @@ there once, and this page links rather than repeats them.
 | `src/modules/audit/` | Two event tables, written from the route layer. |
 | `src/modules/source/` | Mirroring an artifact from an external site. |
 | `src/modules/central/` | The Minecraft plugins' central data, one folder per plugin family, behind `SERVER_API_TOKEN`. Mounted at the paths the plugins already call, not under `/api/v1`. |
+| `src/lib/vectors.ts` | Cosine similarity and top-k, for MCLog's search and the brain's knowledge search. |
 | `src/lib/net.ts` | The private-range check that keeps `/sources/resolve` from being SSRF. |
 | `src/http/params.ts` | Reads one route parameter as a string. Express 5 types them as `string \| string[]`. |
 | `test/` | Vitest suites, plus `helpers.ts` for building an app per suite. |

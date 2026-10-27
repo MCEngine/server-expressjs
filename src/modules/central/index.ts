@@ -6,6 +6,10 @@ import { requireServerToken } from './guard.js';
 import { createCentralIdentityRepository, createCentralIdentityRouter, type CentralIdentityRepository } from './identity/index.js';
 import { createCentralEconomyRepository, createCentralEconomyRouter, type CentralEconomyRepository } from './economy/index.js';
 import { createCentralMcagentsRepository, createCentralMcagentsRouter, type CentralMcagentsRepository } from './mcagents/index.js';
+import { createCentralMembershipRepository, createCentralMembershipRouter, type CentralMembershipRepository } from './membership/index.js';
+import { createCentralChatRepository, createCentralChatRouter, type CentralChatRepository } from './chat/index.js';
+import { createCentralPackageRepository, createCentralPackageRouter, type CentralPackageRepository } from './packages/index.js';
+import { createCentralLogRepository, createCentralLogRouter, type CentralLogRepository } from './mclog/index.js';
 
 export { requireServerToken } from './guard.js';
 
@@ -18,6 +22,10 @@ export interface CentralServices {
   readonly identity: CentralIdentityRepository;
   readonly economy: CentralEconomyRepository;
   readonly mcagents: CentralMcagentsRepository;
+  readonly membership: CentralMembershipRepository;
+  readonly chat: CentralChatRepository;
+  readonly packages: CentralPackageRepository;
+  readonly logs: CentralLogRepository;
 }
 
 export function createCentralServices(db: Kysely<Database>, clock: Clock): CentralServices {
@@ -26,6 +34,10 @@ export function createCentralServices(db: Kysely<Database>, clock: Clock): Centr
     identity: createCentralIdentityRepository(db),
     economy: createCentralEconomyRepository(db),
     mcagents: createCentralMcagentsRepository(db),
+    membership: createCentralMembershipRepository(db),
+    chat: createCentralChatRepository(db),
+    packages: createCentralPackageRepository(db),
+    logs: createCentralLogRepository(db),
   };
 }
 
@@ -42,4 +54,8 @@ export function mountCentral(app: Express, central: CentralServices, secret: str
   app.use('/v1', guard, createCentralIdentityRouter(central.identity, central.clock));
   app.use('/api/economy', guard, createCentralEconomyRouter(central.economy, central.clock));
   app.use('/api/mcagents', guard, createCentralMcagentsRouter(central.mcagents, central.clock));
+  app.use('/api/mcmembership', guard, createCentralMembershipRouter(central.membership, central.clock));
+  app.use('/api/mcagents-chat', guard, createCentralChatRouter(central.chat, central.clock));
+  app.use('/api/mcpackage', guard, createCentralPackageRouter(central.packages, central.clock));
+  app.use('/api/mclog', guard, createCentralLogRouter(central.logs, central.clock));
 }

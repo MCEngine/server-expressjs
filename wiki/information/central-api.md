@@ -36,6 +36,10 @@ is mounted at the prefix its released client already calls, rather than under `/
 | MCIdentity, MCIdentitySkill, MCIdentityRune, MCIdentityCosmetic | `/v1` | REST, camelCase fields |
 | MCEconomy, Market, SlayerRewards | `/api/economy` | One `POST` per plugin, the operation named by `action`, snake_case fields |
 | MCAgents | `/api/mcagents` | REST, snake_case fields, keys in the query string on reads |
+| MCMembership | `/api/mcmembership` | REST, snake_case |
+| MCAgentsChat | `/api/mcagents-chat` | REST, snake_case |
+| MCPackage | `/api/mcpackage` | REST, snake_case |
+| MCLog | `/api/mclog` | REST, snake_case |
 
 Errors use the [same envelope](api-contract.md#errors) as the rest of the service. A schema
 rejection is `400 validation_failed` with the failing fields.
@@ -140,3 +144,46 @@ is `404`, which the client reads as "none". An account is (`account_type`, `acco
 
 **The `token` column is never a usable key.** MCAgents encrypts every stored key with its own
 `token.secret` before it leaves the game server, so this table holds ciphertext only.
+
+## MCMembership — `/api/mcmembership`
+
+| Method | Path | Body or query | Answer |
+|---|---|---|---|
+| `PUT` | `/memberships` | `{account_type, account_uuid, type, ended_time}`; `null` never ends | `{membership}`; replaces one of the same type |
+| `GET` | `/memberships/find` | `?account_type&account_uuid&type` | `{membership}` |
+| `GET` | `/memberships` | `?account_type&account_uuid` | `{memberships}`, by type |
+| `POST` | `/memberships/archive` | `{account_type, account_uuid, type}` | `{archived}`: whether there was one to move to the archive |
+
+## MCAgentsChat — `/api/mcagents-chat`
+
+An open chat session — its mode, model and the conversation so far — so it follows a player
+from one game server to the next. The id is the player's UUID, or the server's for the console.
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/sessions/:id` | | `{session_id, mode, model_id, turns: [{role, content}], total_tokens, updated_at}` |
+| `PUT` | `/sessions/:id` | `{mode: "CHAT" or "ASK", model_id, turns, total_tokens}` | `204`; replaces the session |
+| `DELETE` | `/sessions/:id` | | `204` |
+
+## MCPackage — `/api/mcpackage`
+
+What each game server has installed. A server is the UUID MCPackage generates once in its data
+folder. The project id travels in the body, because a GitHub project is `owner/repo`.
+
+| Method | Path | Body or query | Answer |
+|---|---|---|---|
+| `GET` | `/servers/:serverId/packages` | `?platform` optional | `{packages: [{platform, project_id, version_id, version, file_name, installed_at}]}` |
+| `PUT` | `/servers/:serverId/packages` | one record | `204`; replaces the record of that platform and project |
+
+## MCLog — `/api/mclog`
+
+One log for the whole network, embedded for search. Model names are lower-cased before they are
+stored. Search ranks every log embedded with the same model by cosine similarity.
+
+| Method | Path | Body or query | Answer |
+|---|---|---|---|
+| `POST` | `/logs` | `{contents}` | `201 {id, contents, created_at}` |
+| `GET` | `/logs` | `?limit` (1–500) | `{logs}`, newest first |
+| `GET` | `/logs/count` | | `{count}` |
+| `PUT` | `/logs/:id/embeddings` | `{model_name, embedding: [numbers]}` | `204`; `404 log_not_found` |
+| `POST` | `/logs/search` | `{model_name, embedding, limit}` | `{matches: [{id, contents, created_at, similarity}]}`, best first |
