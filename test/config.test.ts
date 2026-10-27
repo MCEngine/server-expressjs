@@ -23,6 +23,16 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ JWT_SECRET: 'short' })).toThrow(/JWT_SECRET/);
   });
 
+  it('leaves the central plugin secret unset unless it is given, and counts empty as unset', () => {
+    expect(loadConfig(minimal).SERVER_API_TOKEN).toBeUndefined();
+    expect(loadConfig({ ...minimal, SERVER_API_TOKEN: '   ' }).SERVER_API_TOKEN).toBeUndefined();
+    expect(loadConfig({ ...minimal, SERVER_API_TOKEN: 'x'.repeat(16) }).SERVER_API_TOKEN).toBe('x'.repeat(16));
+  });
+
+  it('rejects a central plugin secret short enough to be guessable', () => {
+    expect(() => loadConfig({ ...minimal, SERVER_API_TOKEN: 'short' })).toThrow(/SERVER_API_TOKEN/);
+  });
+
   it('rejects a database provider it has no dialect for', () => {
     expect(() => loadConfig({ ...minimal, DATABASE_PROVIDER: 'mongodb' })).toThrow(
       /DATABASE_PROVIDER/,

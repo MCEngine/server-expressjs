@@ -45,6 +45,12 @@ transactions across the shapes the schema uses, so it is not one more dialect. S
 | `ACCESS_TOKEN_TTL_SECONDS` | positive integer | `900` | Fifteen minutes |
 | `REFRESH_TOKEN_TTL_SECONDS` | positive integer | `2592000` | Thirty days |
 
+## Central plugin API
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `SERVER_API_TOKEN` | string, ≥ 16 chars | unset | The shared secret every plugin's `central_server.token` carries. **Unset or empty turns the [central plugin routes](../information/central-api.md) off.** |
+
 ## Storage and origins
 
 | Key | Type | Default | Notes |

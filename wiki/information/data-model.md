@@ -435,6 +435,30 @@ Things servers do.
 `version_check` is high-volume by design — every server, every interval — so this table is
 partitioned or pruned by `created_at` and is never joined against on a request path.
 
+## Central plugin data
+
+The tables behind the [Central Plugin API](central-api.md). Each is prefixed with the plugin
+that owns it, and its columns are named as that plugin's own SQL backend names them, so a
+network moving off a shared database moves the same shape. None of them references an
+account: a game server is not a person here.
+
+Where a plugin parses an integer id, the key is auto-numbered (`serial` on PostgreSQL,
+`AUTOINCREMENT`/`AUTO_INCREMENT` elsewhere) rather than a ULID.
+
+### MCIdentity family
+
+| Table | Key | Notes |
+|---|---|---|
+| `mcidentity_professions` | `system_code` | |
+| `mcidentity_identities` | `uuid` | Properties live on the identity row. `alias_key` is the lower-cased alias, unique; `NULL` when there is none |
+| `mcidentity_stats` | `identity_uuid` → identities, cascade | The nine stats |
+| `mcidentity_sessions` | `player_uuid` | `identity_uuid` is unique: one identity, one wearer |
+| `mcidentity_logs` | auto-numbered `id` | |
+| `mcidentity_base_slots` | `player_uuid` | |
+| `mcidentity_skills`, `mcidentity_runes` | `system_code` | The add-ons' catalogues |
+| `mcidentity_equipped_skills`, `mcidentity_equipped_runes` | (`identity_uuid`, `slot`) | No foreign key: an add-on may write before the core plugin's identity lands |
+| `mcidentity_cosmetics` | `identity_uuid` | `skin` and `aura` |
+
 ## What the schema enforces on its own
 
 The rules below are constraints, not handler code, because a rule that lives only in a

@@ -4,6 +4,7 @@ import type { Database } from './schema.js';
 import type { DialectTypes } from './types.js';
 import { migration001Initial } from './migrations/001-initial.js';
 import { migration002News } from './migrations/002-news.js';
+import { migration003CentralIdentity } from './migrations/003-central-identity.js';
 
 /**
  * The migrations, in order, as a literal list.
@@ -17,6 +18,7 @@ export function migrations(types: DialectTypes): Record<string, Migration> {
   return {
     '001-initial': migration001Initial(types),
     '002-news': migration002News(types),
+    '003-central-identity': migration003CentralIdentity(types),
   };
 }
 

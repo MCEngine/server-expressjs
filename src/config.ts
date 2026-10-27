@@ -84,6 +84,22 @@ const schema = z.object({
   DEMO_ACCOUNT_HANDLE: z.string().min(2).max(39).default('demo'),
   DEMO_ACCOUNT_EMAIL: z.string().email().default('demo@mcengine.local'),
   DEMO_ACCOUNT_PASSWORD: z.string().min(12).default('demo-password-1234'),
+
+  /**
+   * The shared secret every plugin's `central_server.token` carries.
+   *
+   * **Unset by default, which turns the central plugin routes off.** They hold
+   * a whole network's player data -- economies, identities, inventories -- so a
+   * deployment that has not chosen a secret serves none of it rather than all of
+   * it. An empty value counts as unset, because that is what a plugin's
+   * `token: ""` placeholder sends. Sixteen characters at least: it is the only
+   * credential on those routes.
+   */
+  SERVER_API_TOKEN: z
+    .string()
+    .optional()
+    .transform((value) => (value === undefined || value.trim() === '' ? undefined : value.trim()))
+    .pipe(z.string().min(16).optional()),
 });
 
 export type Config = Readonly<z.infer<typeof schema>>;

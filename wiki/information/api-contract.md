@@ -18,6 +18,9 @@ downloads and uploads.
 Breaking changes get `/api/v2`; the plugin sends its own version and the panel is deployed
 alongside the server, so neither is helped by silent reshaping of a v1 payload.
 
+The Minecraft plugins' own data — identities, economies, AI accounts and the rest — is a
+second API with its own credential and paths: see [Central Plugin API](central-api.md).
+
 ## Authenticating
 
 Three schemes, and which one a route accepts is part of its definition.

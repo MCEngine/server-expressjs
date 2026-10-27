@@ -13,6 +13,7 @@ import { createFleetRouter, type FleetService } from './modules/fleet/index.js';
 import { createAuditRouter, nullAuditService, type AuditService } from './modules/audit/index.js';
 import { createSourceRouter, type SourceService } from './modules/source/index.js';
 import type { Storage } from './storage/index.js';
+import { mountCentral, type CentralServices } from './modules/central/index.js';
 
 /**
  * The domain services the app mounts routes for.
@@ -34,6 +35,11 @@ export interface AppServices {
   readonly audit?: AuditService;
   readonly sources?: SourceService;
   readonly news?: NewsService;
+  /**
+   * The plugins' central data. Mounted only when `SERVER_API_TOKEN` is set too:
+   * without a secret those routes would have no credential at all.
+   */
+  readonly central?: CentralServices;
 }
 
 export interface AppOptions {
@@ -119,6 +125,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
 
   if (services.sources !== undefined && services.storage !== undefined) {
     app.use('/api/v1', createSourceRouter(services.sources, services.storage));
+  }
+
+  if (services.central !== undefined && config.SERVER_API_TOKEN !== undefined) {
+    mountCentral(app, services.central, config.SERVER_API_TOKEN);
   }
 
   app.use(notFoundHandler);
