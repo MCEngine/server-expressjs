@@ -13,6 +13,7 @@ import { createFleetRepository, createFleetService } from './modules/fleet/index
 import { createAuditService } from './modules/audit/index.js';
 import { createSourceService } from './modules/source/index.js';
 import { createNewsRepository, createNewsService } from './modules/news/index.js';
+import { createCentralServices } from './modules/central/index.js';
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -67,12 +68,17 @@ const audit = createAuditService(database.db, systemClock, (error) => {
 
 const sources = createSourceService(database.db, storage, systemClock);
 const news = createNewsService(createNewsRepository(database.db), systemClock);
+const central = createCentralServices(database.db, systemClock);
+
+if (config.SERVER_API_TOKEN === undefined) {
+  logger.info('central plugin routes are off: SERVER_API_TOKEN is not set');
+}
 
 const app = createApp({
   config,
   logger,
   probes: [databaseProbe(database)],
-  services: { identity, auth, products, fleet, storage, audit, sources, news },
+  services: { identity, auth, products, fleet, storage, audit, sources, news, central },
 });
 
 const server = app.listen(config.PORT, () => {

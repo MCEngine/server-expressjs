@@ -22,6 +22,14 @@ export interface DialectTypes {
   readonly text: string;
   readonly json: string;
   /**
+   * An auto-numbered integer key, for the plugin tables whose clients parse an
+   * integer id. PostgreSQL spells it as a type (`serial`); the others spell it
+   * as `integer` plus an `AUTOINCREMENT`/`AUTO_INCREMENT` clause, which is what
+   * `serialNeedsAutoIncrement` says.
+   */
+  readonly serial: string;
+  readonly serialNeedsAutoIncrement: boolean;
+  /**
    * Whether `CREATE UNIQUE INDEX ... WHERE` is supported.
    *
    * PostgreSQL and SQLite have it. MySQL and MariaDB do not, and are given a
@@ -39,6 +47,8 @@ const SQLITE: DialectTypes = {
   bigint: 'integer',
   text: 'text',
   json: 'text',
+  serial: 'integer',
+  serialNeedsAutoIncrement: true,
   supportsPartialIndex: true,
 };
 
@@ -50,6 +60,8 @@ const POSTGRES: DialectTypes = {
   bigint: 'bigint',
   text: 'text',
   json: 'jsonb',
+  serial: 'serial',
+  serialNeedsAutoIncrement: false,
   supportsPartialIndex: true,
 };
 
@@ -65,6 +77,8 @@ const MYSQL = (provider: 'mysql' | 'mariadb'): DialectTypes => ({
   // that might be indexed uses `varchar` and anything long uses `text`.
   text: 'text',
   json: 'json',
+  serial: 'integer',
+  serialNeedsAutoIncrement: true,
   supportsPartialIndex: false,
 });
 

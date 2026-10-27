@@ -67,3 +67,11 @@ Tasks 1–7 merge first: every plugin task calls routes that land in 2–6.
 ### Task 1 — chore/central-plugins-plan
 
 This record and its row in `.agents/index/memory-index.md`. Nothing else.
+
+### Task 2 — feat/central-identity
+
+`SERVER_API_TOKEN` (optional, ≥ 16, empty = unset) and `requireServerToken`, mounted per prefix
+by `mountCentral` so it never sees an `/api/v1` request. Migration `003-central-identity` with
+eleven `mcidentity_*` tables, and `DialectTypes.serial` for auto-numbered keys. Every `/v1`
+route the MCIdentity, skill, rune and cosmetic clients call. `wiki/information/central-api.md`
+is new and later tasks append their families to it.

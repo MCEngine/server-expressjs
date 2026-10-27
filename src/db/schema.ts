@@ -270,6 +270,93 @@ export interface NewsTable {
   updated_at: Timestamp;
 }
 
+/*
+ * The central plugin tables. Every column is named as the plugin's own SQL
+ * backend names it, so the schema reads the same on both sides of the wire.
+ */
+
+/** An auto-numbered key: generated on insert, a number on read. */
+type Serial = ColumnType<number, number | undefined, never>;
+
+export interface McidentityProfessionsTable {
+  system_code: string;
+  display_name: string;
+  created_at: Timestamp;
+}
+
+export interface McidentityIdentitiesTable {
+  uuid: string;
+  profession_code: string;
+  alias: string | null;
+  alias_key: string | null;
+  level: number;
+  exp: number;
+  stat_points: number;
+  head_text: string | null;
+  inventory_contents: string | null;
+  enderchest_contents: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McidentityStatsTable {
+  identity_uuid: string;
+  energy: number;
+  health: number;
+  food: number;
+  strength: number;
+  defense: number;
+  wisdom: number;
+  luck: number;
+  agility: number;
+  resilience: number;
+  updated_at: Timestamp;
+}
+
+export interface McidentitySessionsTable {
+  player_uuid: string;
+  identity_uuid: string;
+  content_key: string | null;
+  equipped_at: Timestamp;
+}
+
+export interface McidentityLogsTable {
+  id: Serial;
+  player_uuid: string;
+  identity_uuid: string;
+  action_type: string;
+  created_at: Timestamp;
+}
+
+export interface McidentityBaseSlotsTable {
+  player_uuid: string;
+  slots: number;
+  updated_at: Timestamp;
+}
+
+/** `mcidentity_skills` and `mcidentity_runes`. */
+export interface McidentityCatalogueTable {
+  system_code: string;
+  display_name: string;
+  item: string | null;
+  created_at: Timestamp;
+}
+
+/** `mcidentity_equipped_skills` and `mcidentity_equipped_runes`. */
+export interface McidentityEquippedTable {
+  identity_uuid: string;
+  slot: number;
+  item_code: string;
+  updated_at: Timestamp;
+}
+
+export interface McidentityCosmeticsTable {
+  identity_uuid: string;
+  skin: string | null;
+  aura: string | null;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -293,6 +380,17 @@ export interface Database {
   audit_events: AuditEventsTable;
   fleet_events: FleetEventsTable;
   news: NewsTable;
+  mcidentity_professions: McidentityProfessionsTable;
+  mcidentity_identities: McidentityIdentitiesTable;
+  mcidentity_stats: McidentityStatsTable;
+  mcidentity_sessions: McidentitySessionsTable;
+  mcidentity_logs: McidentityLogsTable;
+  mcidentity_base_slots: McidentityBaseSlotsTable;
+  mcidentity_skills: McidentityCatalogueTable;
+  mcidentity_runes: McidentityCatalogueTable;
+  mcidentity_equipped_skills: McidentityEquippedTable;
+  mcidentity_equipped_runes: McidentityEquippedTable;
+  mcidentity_cosmetics: McidentityCosmeticsTable;
 }
 
 export type Account = Selectable<AccountsTable>;
