@@ -4,6 +4,7 @@ import type { Database } from '../../db/schema.js';
 import type { Clock } from '../../lib/clock.js';
 import { requireServerToken } from './guard.js';
 import { createCentralIdentityRepository, createCentralIdentityRouter, type CentralIdentityRepository } from './identity/index.js';
+import { createCentralEconomyRepository, createCentralEconomyRouter, type CentralEconomyRepository } from './economy/index.js';
 
 export { requireServerToken } from './guard.js';
 
@@ -14,12 +15,14 @@ export { requireServerToken } from './guard.js';
 export interface CentralServices {
   readonly clock: Clock;
   readonly identity: CentralIdentityRepository;
+  readonly economy: CentralEconomyRepository;
 }
 
 export function createCentralServices(db: Kysely<Database>, clock: Clock): CentralServices {
   return {
     clock,
     identity: createCentralIdentityRepository(db),
+    economy: createCentralEconomyRepository(db),
   };
 }
 
@@ -34,4 +37,5 @@ export function createCentralServices(db: Kysely<Database>, clock: Clock): Centr
 export function mountCentral(app: Express, central: CentralServices, secret: string): void {
   const guard = requireServerToken(secret);
   app.use('/v1', guard, createCentralIdentityRouter(central.identity, central.clock));
+  app.use('/api/economy', guard, createCentralEconomyRouter(central.economy, central.clock));
 }

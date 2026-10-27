@@ -75,3 +75,11 @@ by `mountCentral` so it never sees an `/api/v1` request. Migration `003-central-
 eleven `mcidentity_*` tables, and `DialectTypes.serial` for auto-numbered keys. Every `/v1`
 route the MCIdentity, skill, rune and cosmetic clients call. `wiki/information/central-api.md`
 is new and later tasks append their families to it.
+
+### Task 3 — feat/central-economy
+
+Migration `004-central-economy` (`mceconomy_*`, `market_items`, `slayerrewards_*`) and
+`serialPrimaryKey(t)` in `src/db/types.ts`, which 003 now uses too. The three action-dispatch
+endpoints under `/api/economy`. Upserts are select-then-write inside a transaction, never
+`onConflict`, because MySQL spells it differently. Money travels as a string and anything a JS
+number would round is refused.

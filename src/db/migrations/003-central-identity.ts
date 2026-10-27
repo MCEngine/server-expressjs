@@ -1,6 +1,6 @@
 import { sql, type Kysely } from 'kysely';
 import type { Migration } from 'kysely/migration';
-import type { DialectTypes } from '../types.js';
+import { serialPrimaryKey, type DialectTypes } from '../types.js';
 
 /**
  * The MCIdentity family's central data: the core plugin's professions,
@@ -80,9 +80,7 @@ export function migration003CentralIdentity(t: DialectTypes): Migration {
 
       await db.schema
         .createTable('mcidentity_logs')
-        .addColumn('id', sql.raw(t.serial), (c) =>
-          t.serialNeedsAutoIncrement ? c.primaryKey().autoIncrement() : c.primaryKey(),
-        )
+        .addColumn('id', sql.raw(t.serial), serialPrimaryKey(t))
         .addColumn('player_uuid', uuid, (c) => c.notNull())
         .addColumn('identity_uuid', uuid, (c) => c.notNull())
         .addColumn('action_type', 'varchar(50)', (c) => c.notNull())

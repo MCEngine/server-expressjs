@@ -459,6 +459,17 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 | `mcidentity_equipped_skills`, `mcidentity_equipped_runes` | (`identity_uuid`, `slot`) | No foreign key: an add-on may write before the core plugin's identity lands |
 | `mcidentity_cosmetics` | `identity_uuid` | `skin` and `aura` |
 
+### MCEconomy, Market and SlayerRewards
+
+| Table | Key | Notes |
+|---|---|---|
+| `mceconomy_accounts` | (`account_type`, `account_uuid`) | `account_type` is `player` or `identity` |
+| `mceconomy_currencies` | auto-numbered `id` | `system_code` unique; `is_transferable` |
+| `mceconomy_wallets` | (`account_type`, `account_uuid`, `currency_id`) | → accounts, cascade; → currencies. `amount` is `bigint` |
+| `mceconomy_logs` | auto-numbered `id` | The ledger; indexed by account |
+| `market_items` | (`market_name`, `item_index`) | Prices are `bigint`; `-1` means "not for sale" in the plugin |
+| `slayerrewards_kills`, `slayerrewards_rewards` | auto-numbered `id` | Indexed by (`player_uuid`, `id`) for "newest first" |
+
 ## What the schema enforces on its own
 
 The rules below are constraints, not handler code, because a rule that lives only in a

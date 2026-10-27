@@ -1,3 +1,4 @@
+import type { ColumnDefinitionBuilder } from 'kysely';
 import type { Config } from '../config.js';
 
 export type SqlProvider = Config['DATABASE_PROVIDER'];
@@ -93,4 +94,13 @@ export function dialectTypes(provider: SqlProvider): DialectTypes {
     case 'mariadb':
       return MYSQL('mariadb');
   }
+}
+
+/**
+ * The column builder for an auto-numbered primary key, to pass beside
+ * `sql.raw(t.serial)`: `AUTOINCREMENT` where the engine needs the clause,
+ * nothing where `serial` already says it.
+ */
+export function serialPrimaryKey(t: DialectTypes): (c: ColumnDefinitionBuilder) => ColumnDefinitionBuilder {
+  return (c) => (t.serialNeedsAutoIncrement ? c.primaryKey().autoIncrement() : c.primaryKey());
 }
