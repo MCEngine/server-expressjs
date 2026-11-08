@@ -7,6 +7,12 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
+## As of 0.4.0
+
+**MCPackage can remove a central record** — `DELETE /api/mcpackage/servers/:serverId/packages`
+with `platform` and `project_id` in the query, for MCPackage 0.9.0's `/package uninstall`, plan
+`../tasks/mcpackage-uninstall.md`. Everything below still holds.
+
 ## As of 0.3.0
 
 **MCStory's archive is keyed by account** — `account_type` + `account_uuid`, routes under

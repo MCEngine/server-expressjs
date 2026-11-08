@@ -45,3 +45,8 @@ This record and its row in `.agents/index/memory-index.md`.
 routes, both required, `204` even when nothing matched). A test covers removing one of two
 records sharing a project id, the repeat delete, and a missing `project_id` (`400`).
 `central-api.md` lists the route.
+
+### Task 3 — release/0.4.0
+
+`version` 0.3.0 → 0.4.0 in `package.json` and `package-lock.json`, `wiki/logs/0/4/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and the repository state record. Closes this plan.
