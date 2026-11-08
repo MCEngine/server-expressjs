@@ -38,6 +38,7 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`tasks/news-and-pages.md`](../memory/tasks/news-and-pages.md) | News with Markdown bodies, a policy page, a CI/CD page and a left-hand navigation: the confirmed eight-task plan across two repositories. |
 | [`tasks/central-plugins.md`](../memory/tasks/central-plugins.md) | The central server for every plugin and the `ask_global` brain: the confirmed plan across six repositories, and one entry per task. |
 | [`tasks/mcstory-central.md`](../memory/tasks/mcstory-central.md) | MCStory's stories and achievements served under `/api/mcstory`: the confirmed plan across two repositories, and one entry per task. |
+| [`tasks/mcstory-accounts.md`](../memory/tasks/mcstory-accounts.md) | MCStory's archive keyed by `account_type` + `account_uuid` instead of player: the confirmed plan across two repositories, and one entry per task. |
 
 ## Decisions
 
