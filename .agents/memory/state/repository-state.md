@@ -7,6 +7,12 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
+## As of 0.2.0
+
+**MCStory's archive is served under `/api/mcstory`** — stories and achievements, migration
+`008-central-mcstory`, plan `../tasks/mcstory-central.md`. Everything below about 0.1.0 still
+holds.
+
 ## As of 0.1.0
 
 **The central server for every MCEngine-family plugin ships in 0.1.0.** With `SERVER_API_TOKEN`
