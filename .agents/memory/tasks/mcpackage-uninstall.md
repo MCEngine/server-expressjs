@@ -37,3 +37,11 @@ The client half lands in MCSeere/mcpackage 0.9.0, after this release.
 ### Task 1 — plan/mcpackage-uninstall
 
 This record and its row in `.agents/index/memory-index.md`.
+
+### Task 2 — feat/package-delete
+
+`CentralPackageRepository.remove(serverId, platform, projectId)` and
+`DELETE /servers/:serverId/packages?platform=&project_id=` (platform lower-cased like the other
+routes, both required, `204` even when nothing matched). A test covers removing one of two
+records sharing a project id, the repeat delete, and a missing `project_id` (`400`).
+`central-api.md` lists the route.

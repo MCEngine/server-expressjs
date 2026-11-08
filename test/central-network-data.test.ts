@@ -86,6 +86,20 @@ describe('central routes for the plugins that had none', () => {
       const other = 'bbbbbbbb-bbbb-cccc-dddd-eeeeeeeeeeee';
       expect((await s.get(`/api/mcpackage/servers/${other}/packages`)).body.packages).toEqual([]);
     });
+
+    it('removes one record by platform and project, and answers 204 when it is gone already', async () => {
+      const base = `/api/mcpackage/servers/${SERVER}/packages`;
+      await s.put(base, { platform: 'github', project_id: 'MCPaimon/mcagents', file_name: 'MCAgents.jar' }).expect(204);
+      await s.put(base, { platform: 'modrinth', project_id: 'MCPaimon/mcagents' }).expect(204);
+
+      await s.del(`${base}?platform=GitHub&project_id=${encodeURIComponent('MCPaimon/mcagents')}`).expect(204);
+      const left = (await s.get(base)).body.packages;
+      expect(left).toHaveLength(1);
+      expect(left[0]).toMatchObject({ platform: 'modrinth', project_id: 'MCPaimon/mcagents' });
+
+      await s.del(`${base}?platform=github&project_id=${encodeURIComponent('MCPaimon/mcagents')}`).expect(204);
+      expect((await s.del(`${base}?platform=github`)).status).toBe(400);
+    });
   });
 
   describe('MCLog', () => {
