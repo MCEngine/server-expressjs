@@ -51,3 +51,8 @@ Migration `008-central-mcstory` (`mcstory_stories`, `mcstory_achievements`), the
 newest-first and per-player reads, award-once with `201`/`200`, malformed keys and players, and
 the secret. Checked end to end against MCStory's Java `CentralStoryStore`. `central-api.md` and
 `data-model.md` describe the routes and tables.
+
+### Task 3 — release/0.2.0
+
+`version` 0.1.0 → 0.2.0 in `package.json` and `package-lock.json`, `wiki/logs/0/2/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and the repository state record. Closes this plan.
