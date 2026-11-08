@@ -49,3 +49,8 @@ Migration `009-mcstory-accounts`: stories gain `account_type` and rename `player
 `AccountKey`, and the per-owner routes move to `/accounts/:accountType/:accountUuid/...`. Tests
 cover the routes, account types sharing a UUID, the type/UUID pairing, and the migration on rows
 written by `008`. `central-api.md` and `data-model.md` describe the new key.
+
+### Task 3 — release/0.3.0
+
+`version` 0.2.0 → 0.3.0 in `package.json` and `package-lock.json`, `wiki/logs/0/3/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and the repository state record. Closes this plan.
