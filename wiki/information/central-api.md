@@ -40,6 +40,7 @@ is mounted at the prefix its released client already calls, rather than under `/
 | MCAgentsChat | `/api/mcagents-chat` | REST, snake_case |
 | MCPackage | `/api/mcpackage` | REST, snake_case |
 | MCLog | `/api/mclog` | REST, snake_case |
+| MCStory | `/api/mcstory` | REST, snake_case |
 
 Errors use the [same envelope](api-contract.md#errors) as the rest of the service. A schema
 rejection is `400 validation_failed` with the failing fields.
@@ -187,6 +188,21 @@ stored. Search ranks every log embedded with the same model by cosine similarity
 | `GET` | `/logs/count` | | `{count}` |
 | `PUT` | `/logs/:id/embeddings` | `{model_name, embedding: [numbers]}` | `204`; `404 log_not_found` |
 | `POST` | `/logs/search` | `{model_name, embedding, limit}` | `{matches: [{id, contents, created_at, similarity}]}`, best first |
+
+## MCStory — `/api/mcstory`
+
+The network's story archive: the lore MCStory's agent writes and the achievements it awards.
+A story's id is the UUID MCStory generated for it, so a story keeps one id wherever it was
+written. The server stamps `created_at` and `awarded_at` from its own clock. An achievement
+key is lower-case snake_case of at most 64 characters, and a player holds each key once.
+
+| Method | Path | Body or query | Answer |
+|---|---|---|---|
+| `POST` | `/stories` | `{id, title, content, player_uuid, source}`; `player_uuid` `null` is a story about the server | `201 {story}`; `409 story_exists` when the id is held |
+| `GET` | `/stories` | `?limit` (1–100, default 10) | `{stories}`, newest first |
+| `GET` | `/players/:playerUuid/stories` | `?limit` | `{stories}` about that player, newest first |
+| `PUT` | `/players/:playerUuid/achievements/:key` | `{title, description, source}` | `201 {awarded: true, achievement}`; a repeat is `200 {awarded: false, achievement}` with the first award unchanged |
+| `GET` | `/players/:playerUuid/achievements` | | `{achievements}`, oldest first |
 
 ## The central brain — `/api/mcagents/ask_global`
 

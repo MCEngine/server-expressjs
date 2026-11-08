@@ -544,6 +544,24 @@ export interface McagentsKnowledgeEmbeddingsTable {
   embedding: string;
 }
 
+export interface McstoryStoriesTable {
+  id: string;
+  title: string;
+  content: string;
+  player_uuid: string | null;
+  source: string;
+  created_at: Timestamp;
+}
+
+export interface McstoryAchievementsTable {
+  player_uuid: string;
+  achievement_key: string;
+  title: string;
+  description: string;
+  source: string;
+  awarded_at: Timestamp;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -599,6 +617,8 @@ export interface Database {
   mclog_embeddings: MclogEmbeddingsTable;
   mcagents_knowledge: McagentsKnowledgeTable;
   mcagents_knowledge_embeddings: McagentsKnowledgeEmbeddingsTable;
+  mcstory_stories: McstoryStoriesTable;
+  mcstory_achievements: McstoryAchievementsTable;
 }
 
 export type Account = Selectable<AccountsTable>;
