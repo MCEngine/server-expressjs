@@ -18,6 +18,7 @@ export interface InstalledPackage {
 export interface CentralPackageRepository {
   list(serverId: string, platform?: string): Promise<InstalledPackage[]>;
   record(serverId: string, record: InstalledPackage, at: string): Promise<void>;
+  remove(serverId: string, platform: string, projectId: string): Promise<void>;
 }
 
 export function createCentralPackageRepository(db: Kysely<Database>): CentralPackageRepository {
@@ -58,6 +59,15 @@ export function createCentralPackageRepository(db: Kysely<Database>): CentralPac
           })
           .execute();
       }),
+
+    async remove(serverId, platform, projectId) {
+      await db
+        .deleteFrom('mcpackage_packages')
+        .where('server_id', '=', serverId)
+        .where('platform', '=', platform)
+        .where('project_id', '=', projectId)
+        .execute();
+    },
   };
 }
 
@@ -90,6 +100,14 @@ export function createCentralPackageRouter(repo: CentralPackageRepository, clock
       })
       .parse(req.body);
     await repo.record(uuidParam(req, 'serverId'), body, iso(clock.now()));
+    res.status(204).end();
+  });
+
+  // Removes one record, for /package uninstall. Idempotent: a record that is not
+  // there still answers 204, so a retried uninstall never fails on its first try.
+  router.delete('/servers/:serverId/packages', async (req, res) => {
+    const query = z.object({ platform, project_id: z.string().min(1).max(255) }).parse(req.query);
+    await repo.remove(uuidParam(req, 'serverId'), query.platform, query.project_id);
     res.status(204).end();
   });
 

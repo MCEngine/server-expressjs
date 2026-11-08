@@ -169,12 +169,14 @@ from one game server to the next. The id is the player's UUID, or the server's f
 ## MCPackage — `/api/mcpackage`
 
 What each game server has installed. A server is the UUID MCPackage generates once in its data
-folder. The project id travels in the body, because a GitHub project is `owner/repo`.
+folder. The project id travels in the body or the query, never the path, because a GitHub
+project is `owner/repo`.
 
 | Method | Path | Body or query | Answer |
 |---|---|---|---|
 | `GET` | `/servers/:serverId/packages` | `?platform` optional | `{packages: [{platform, project_id, version_id, version, file_name, installed_at}]}` |
 | `PUT` | `/servers/:serverId/packages` | one record | `204`; replaces the record of that platform and project |
+| `DELETE` | `/servers/:serverId/packages` | `?platform&project_id`, both required | `204`, also when no such record exists; `/package uninstall` calls it |
 
 ## MCLog — `/api/mclog`
 
