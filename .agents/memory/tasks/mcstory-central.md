@@ -42,3 +42,12 @@ The client half — `io.github.mcipos.mcstory.common.central` — lands in MCIpo
 ### Task 1 — plan/mcstory-central
 
 This record and its row in `.agents/index/memory-index.md`.
+
+### Task 2 — feat/central-mcstory
+
+Migration `008-central-mcstory` (`mcstory_stories`, `mcstory_achievements`), their types in
+`src/db/schema.ts`, and `src/modules/central/mcstory/` (repository, router, index) mounted at
+`/api/mcstory` behind the guard. `test/central-mcstory.test.ts` covers archive-once with `409`,
+newest-first and per-player reads, award-once with `201`/`200`, malformed keys and players, and
+the secret. Checked end to end against MCStory's Java `CentralStoryStore`. `central-api.md` and
+`data-model.md` describe the routes and tables.

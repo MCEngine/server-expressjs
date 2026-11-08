@@ -492,6 +492,13 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 | `mclog_logs` | auto-numbered `id` | |
 | `mclog_embeddings` | (`log_id`, `model_name`) | → logs, cascade. The vector is JSON text; similarity is computed in the application, so no engine needs a vector type |
 
+### MCStory
+
+| Table | Key | Notes |
+|---|---|---|
+| `mcstory_stories` | `id`, the UUID MCStory gave the story | `player_uuid` `NULL` is a story about the server; indexed by `created_at` and by (`player_uuid`, `created_at`) |
+| `mcstory_achievements` | (`player_uuid`, `achievement_key`) | Held once; a repeat award keeps the first row |
+
 ### The central brain
 
 | Table | Key | Notes |

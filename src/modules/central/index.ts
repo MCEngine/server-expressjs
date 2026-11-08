@@ -10,6 +10,7 @@ import { createCentralMembershipRepository, createCentralMembershipRouter, type 
 import { createCentralChatRepository, createCentralChatRouter, type CentralChatRepository } from './chat/index.js';
 import { createCentralPackageRepository, createCentralPackageRouter, type CentralPackageRepository } from './packages/index.js';
 import { createCentralLogRepository, createCentralLogRouter, type CentralLogRepository } from './mclog/index.js';
+import { createCentralStoryRepository, createCentralStoryRouter, type CentralStoryRepository } from './mcstory/index.js';
 import {
   createBrainRouter,
   createBrainService,
@@ -36,6 +37,7 @@ export interface CentralServices {
   readonly chat: CentralChatRepository;
   readonly packages: CentralPackageRepository;
   readonly logs: CentralLogRepository;
+  readonly stories: CentralStoryRepository;
   readonly knowledge: KnowledgeRepository;
   readonly brain: BrainService;
 }
@@ -76,6 +78,7 @@ export function createCentralServices(
     chat: createCentralChatRepository(db),
     packages: createCentralPackageRepository(db),
     logs,
+    stories: createCentralStoryRepository(db),
     knowledge,
     brain,
   };
@@ -99,4 +102,5 @@ export function mountCentral(app: Express, central: CentralServices, secret: str
   app.use('/api/mcagents-chat', guard, createCentralChatRouter(central.chat, central.clock));
   app.use('/api/mcpackage', guard, createCentralPackageRouter(central.packages, central.clock));
   app.use('/api/mclog', guard, createCentralLogRouter(central.logs, central.clock));
+  app.use('/api/mcstory', guard, createCentralStoryRouter(central.stories, central.clock));
 }
