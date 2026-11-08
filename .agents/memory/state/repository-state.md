@@ -7,6 +7,12 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
+## As of 0.3.0
+
+**MCStory's archive is keyed by account** — `account_type` + `account_uuid`, routes under
+`/api/mcstory/accounts/:accountType/:accountUuid`, migration `009-mcstory-accounts`, plan
+`../tasks/mcstory-accounts.md`. The `/players` routes of 0.2.0 are gone.
+
 ## As of 0.2.0
 
 **MCStory's archive is served under `/api/mcstory`** — stories and achievements, migration
