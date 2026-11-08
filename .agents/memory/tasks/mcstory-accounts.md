@@ -40,3 +40,12 @@ The client half lands in MCIpos/mcstory 0.2.0, after this release.
 ### Task 1 — plan/mcstory-accounts
 
 This record and its row in `.agents/index/memory-index.md`.
+
+### Task 2 — feat/account-keys
+
+Migration `009-mcstory-accounts`: stories gain `account_type` and rename `player_uuid` to
+`account_uuid` in place; achievements are rebuilt under the key (`account_type`, `account_uuid`,
+`achievement_key`); old rows become `player` accounts. The repository and router take an
+`AccountKey`, and the per-owner routes move to `/accounts/:accountType/:accountUuid/...`. Tests
+cover the routes, account types sharing a UUID, the type/UUID pairing, and the migration on rows
+written by `008`. `central-api.md` and `data-model.md` describe the new key.
