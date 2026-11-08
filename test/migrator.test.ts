@@ -76,3 +76,33 @@ describe('migrations', () => {
     expect(dialectTypes('mariadb').supportsPartialIndex).toBe(false);
   });
 });
+
+describe('009-mcstory-accounts', () => {
+  it('moves player-keyed stories and achievements to player accounts', async () => {
+    const t = await freshDatabase();
+    try {
+      const migration = migrations(dialectTypes('sqlite'))['009-mcstory-accounts']!;
+      await migration.down!(t.db);
+
+      await sql`insert into mcstory_stories (id, title, content, player_uuid, source, created_at)
+        values ('s1', 'A', 'a', 'p1', 'minecraft', '2026-01-01T00:00:00.000Z'),
+               ('s2', 'B', 'b', null, 'minecraft', '2026-01-02T00:00:00.000Z')`.execute(t.db);
+      await sql`insert into mcstory_achievements (player_uuid, achievement_key, title, description, source, awarded_at)
+        values ('p1', 'gatebreaker', 'G', 'g', 'minecraft', '2026-01-01T00:00:00.000Z')`.execute(t.db);
+
+      await migration.up(t.db);
+
+      const stories = await sql<{ id: string; account_type: string | null; account_uuid: string | null }>`
+        select id, account_type, account_uuid from mcstory_stories order by id`.execute(t.db);
+      expect(stories.rows).toEqual([
+        { id: 's1', account_type: 'player', account_uuid: 'p1' },
+        { id: 's2', account_type: null, account_uuid: null },
+      ]);
+      const awards = await sql<{ account_type: string; account_uuid: string; achievement_key: string }>`
+        select account_type, account_uuid, achievement_key from mcstory_achievements`.execute(t.db);
+      expect(awards.rows).toEqual([{ account_type: 'player', account_uuid: 'p1', achievement_key: 'gatebreaker' }]);
+    } finally {
+      await t.destroy();
+    }
+  });
+});

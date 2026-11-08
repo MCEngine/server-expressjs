@@ -10,6 +10,7 @@ import { migration005CentralMcagents } from './migrations/005-central-mcagents.j
 import { migration006CentralNetworkData } from './migrations/006-central-network-data.js';
 import { migration007CentralKnowledge } from './migrations/007-central-knowledge.js';
 import { migration008CentralMcstory } from './migrations/008-central-mcstory.js';
+import { migration009McstoryAccounts } from './migrations/009-mcstory-accounts.js';
 
 /**
  * The migrations, in order, as a literal list.
@@ -29,6 +30,7 @@ export function migrations(types: DialectTypes): Record<string, Migration> {
     '006-central-network-data': migration006CentralNetworkData(types),
     '007-central-knowledge': migration007CentralKnowledge(types),
     '008-central-mcstory': migration008CentralMcstory(types),
+    '009-mcstory-accounts': migration009McstoryAccounts(types),
   };
 }
 
