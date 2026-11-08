@@ -548,13 +548,16 @@ export interface McstoryStoriesTable {
   id: string;
   title: string;
   content: string;
-  player_uuid: string | null;
+  /** Both null for a story about the world rather than one account. */
+  account_type: string | null;
+  account_uuid: string | null;
   source: string;
   created_at: Timestamp;
 }
 
 export interface McstoryAchievementsTable {
-  player_uuid: string;
+  account_type: string;
+  account_uuid: string;
   achievement_key: string;
   title: string;
   description: string;
