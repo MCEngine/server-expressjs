@@ -496,8 +496,10 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 
 | Table | Key | Notes |
 |---|---|---|
-| `mcstory_stories` | `id`, the UUID MCStory gave the story | `player_uuid` `NULL` is a story about the server; indexed by `created_at` and by (`player_uuid`, `created_at`) |
-| `mcstory_achievements` | (`player_uuid`, `achievement_key`) | Held once; a repeat award keeps the first row |
+| `mcstory_stories` | `id`, the UUID MCStory gave the story | `account_type` and `account_uuid` both `NULL` is a story about the world; indexed by `created_at` and by (`account_type`, `account_uuid`, `created_at`) |
+| `mcstory_achievements` | (`account_type`, `account_uuid`, `achievement_key`) | Held once per account; a repeat award keeps the first row |
+
+Migration `009-mcstory-accounts` moved the rows `008` wrote, which were keyed by `player_uuid`, to `player` accounts.
 
 ### The central brain
 

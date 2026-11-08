@@ -1,17 +1,29 @@
 import type { Kysely } from 'kysely';
 import type { Database } from '../../../db/schema.js';
 
+/**
+ * Who a story or achievement belongs to: a type such as `player` or `clan`, or
+ * any type another plugin defines, and that account's UUID.
+ */
+export interface AccountKey {
+  accountType: string;
+  accountUuid: string;
+}
+
 export interface Story {
   id: string;
   title: string;
   content: string;
-  player_uuid: string | null;
+  /** Both null for a story about the world rather than one account. */
+  account_type: string | null;
+  account_uuid: string | null;
   source: string;
   created_at: string;
 }
 
 export interface Achievement {
-  player_uuid: string;
+  account_type: string;
+  account_uuid: string;
   achievement_key: string;
   title: string;
   description: string;
@@ -34,12 +46,12 @@ export interface CentralStoryRepository {
   insertStory(story: NewStory, at: string): Promise<Story | undefined>;
   /** The newest stories across the network. */
   recentStories(limit: number): Promise<Story[]>;
-  /** The newest stories about one player. */
-  playerStories(playerUuid: string, limit: number): Promise<Story[]>;
+  /** The newest stories about one account. */
+  accountStories(account: AccountKey, limit: number): Promise<Story[]>;
   /** Awards an achievement once; a repeat keeps the first award. */
   award(achievement: NewAchievement, at: string): Promise<Award>;
-  /** One player's achievements, oldest first. */
-  achievements(playerUuid: string): Promise<Achievement[]>;
+  /** One account's achievements, oldest first. */
+  achievements(account: AccountKey): Promise<Achievement[]>;
 }
 
 export function createCentralStoryRepository(db: Kysely<Database>): CentralStoryRepository {
@@ -57,9 +69,10 @@ export function createCentralStoryRepository(db: Kysely<Database>): CentralStory
 
     recentStories: (limit) => stories().orderBy('created_at', 'desc').orderBy('id', 'desc').limit(limit).execute(),
 
-    playerStories: (playerUuid, limit) =>
+    accountStories: (account, limit) =>
       stories()
-        .where('player_uuid', '=', playerUuid)
+        .where('account_type', '=', account.accountType)
+        .where('account_uuid', '=', account.accountUuid)
         .orderBy('created_at', 'desc')
         .orderBy('id', 'desc')
         .limit(limit)
@@ -70,7 +83,8 @@ export function createCentralStoryRepository(db: Kysely<Database>): CentralStory
         const held = await trx
           .selectFrom('mcstory_achievements')
           .selectAll()
-          .where('player_uuid', '=', achievement.player_uuid)
+          .where('account_type', '=', achievement.account_type)
+          .where('account_uuid', '=', achievement.account_uuid)
           .where('achievement_key', '=', achievement.achievement_key)
           .executeTakeFirst();
         if (held !== undefined) return { awarded: false, achievement: held };
@@ -79,11 +93,12 @@ export function createCentralStoryRepository(db: Kysely<Database>): CentralStory
         return { awarded: true, achievement: row };
       }),
 
-    achievements: (playerUuid) =>
+    achievements: (account) =>
       db
         .selectFrom('mcstory_achievements')
         .selectAll()
-        .where('player_uuid', '=', playerUuid)
+        .where('account_type', '=', account.accountType)
+        .where('account_uuid', '=', account.accountUuid)
         .orderBy('awarded_at')
         .orderBy('achievement_key')
         .execute(),

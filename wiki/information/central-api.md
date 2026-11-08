@@ -192,17 +192,24 @@ stored. Search ranks every log embedded with the same model by cosine similarity
 ## MCStory — `/api/mcstory`
 
 The network's story archive: the lore MCStory's agent writes and the achievements it awards.
+Both belong to an **account**, an `account_type` plus an `account_uuid`, as MCEconomy keys
+wallets: `player` with the player UUID, `identity` with an MCIdentity identity UUID, `clan` with
+a clan UUID, or any type another plugin defines. A type is lower-case snake_case of at most 50
+characters, and the same UUID under two types is two accounts.
+
 A story's id is the UUID MCStory generated for it, so a story keeps one id wherever it was
-written. The server stamps `created_at` and `awarded_at` from its own clock. An achievement
-key is lower-case snake_case of at most 64 characters, and a player holds each key once.
+written. The server stamps `created_at` and `awarded_at` from its own clock. An achievement key
+is lower-case snake_case of at most 64 characters, and an account holds each key once.
 
 | Method | Path | Body or query | Answer |
 |---|---|---|---|
-| `POST` | `/stories` | `{id, title, content, player_uuid, source}`; `player_uuid` `null` is a story about the server | `201 {story}`; `409 story_exists` when the id is held |
+| `POST` | `/stories` | `{id, title, content, account_type, account_uuid, source}`; both account fields `null` is a story about the world, one without the other is `400` | `201 {story}`; `409 story_exists` when the id is held |
 | `GET` | `/stories` | `?limit` (1–100, default 10) | `{stories}`, newest first |
-| `GET` | `/players/:playerUuid/stories` | `?limit` | `{stories}` about that player, newest first |
-| `PUT` | `/players/:playerUuid/achievements/:key` | `{title, description, source}` | `201 {awarded: true, achievement}`; a repeat is `200 {awarded: false, achievement}` with the first award unchanged |
-| `GET` | `/players/:playerUuid/achievements` | | `{achievements}`, oldest first |
+| `GET` | `/accounts/:accountType/:accountUuid/stories` | `?limit` | `{stories}` about that account, newest first |
+| `PUT` | `/accounts/:accountType/:accountUuid/achievements/:key` | `{title, description, source}` | `201 {awarded: true, achievement}`; a repeat is `200 {awarded: false, achievement}` with the first award unchanged |
+| `GET` | `/accounts/:accountType/:accountUuid/achievements` | | `{achievements}`, oldest first |
+
+A malformed type answers `400 invalid_account_type`, a malformed UUID `400 invalid_uuid`.
 
 ## The central brain — `/api/mcagents/ask_global`
 
