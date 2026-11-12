@@ -207,6 +207,8 @@ is lower-case snake_case of at most 64 characters, and an account holds each key
 |---|---|---|---|
 | `POST` | `/stories` | `{id, title, content, account_type, account_uuid, source}`; both account fields `null` is a story about the world, one without the other is `400` | `201 {story}`; `409 story_exists` when the id is held |
 | `GET` | `/stories` | `?limit` (1–100, default 10) | `{stories}`, newest first |
+| `GET` | `/stories/:id` | | `{story}`; `404 story_not_found` |
+| `PUT` | `/stories/:id` | `{title, content, account_type, account_uuid, source}`, the same rules as `POST` | `{story}` with its id and `created_at` kept; `404 story_not_found` — an update never creates |
 | `GET` | `/accounts/:accountType/:accountUuid/stories` | `?limit` | `{stories}` about that account, newest first |
 | `PUT` | `/accounts/:accountType/:accountUuid/achievements/:key` | `{title, description, source}` | `201 {awarded: true, achievement}`; a repeat is `200 {awarded: false, achievement}` with the first award unchanged |
 | `GET` | `/accounts/:accountType/:accountUuid/achievements` | | `{achievements}`, oldest first |

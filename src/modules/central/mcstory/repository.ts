@@ -32,6 +32,7 @@ export interface Achievement {
 }
 
 export type NewStory = Omit<Story, 'created_at'>;
+export type StoryEdit = Omit<Story, 'id' | 'created_at'>;
 export type NewAchievement = Omit<Achievement, 'awarded_at'>;
 
 /** The outcome of an award: whether it was new, and the row now held. */
@@ -44,6 +45,10 @@ export interface Award {
 export interface CentralStoryRepository {
   /** Stores a story; undefined when its id is already taken. */
   insertStory(story: NewStory, at: string): Promise<Story | undefined>;
+  /** One story by id; undefined when none is archived. */
+  story(id: string): Promise<Story | undefined>;
+  /** Replaces a story's text, account and source, keeping its id and created_at; undefined when none is archived. */
+  updateStory(id: string, edit: StoryEdit): Promise<Story | undefined>;
   /** The newest stories across the network. */
   recentStories(limit: number): Promise<Story[]>;
   /** The newest stories about one account. */
@@ -65,6 +70,16 @@ export function createCentralStoryRepository(db: Kysely<Database>): CentralStory
         const row: Story = { ...story, created_at: at };
         await trx.insertInto('mcstory_stories').values(row).execute();
         return row;
+      }),
+
+    story: (id) => stories().where('id', '=', id).executeTakeFirst(),
+
+    updateStory: (id, edit) =>
+      db.transaction().execute(async (trx) => {
+        const held = await trx.selectFrom('mcstory_stories').selectAll().where('id', '=', id).executeTakeFirst();
+        if (held === undefined) return undefined;
+        await trx.updateTable('mcstory_stories').set(edit).where('id', '=', id).execute();
+        return { ...held, ...edit };
       }),
 
     recentStories: (limit) => stories().orderBy('created_at', 'desc').orderBy('id', 'desc').limit(limit).execute(),
