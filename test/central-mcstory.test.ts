@@ -62,6 +62,33 @@ describe('MCStory central routes', () => {
     expect(clan.map((x: { id: string }) => x.id.slice(-1))).toEqual(['3']);
   });
 
+  it('reads one story by id and updates it in place', async () => {
+    const id = 'aaaaaaaa-0000-0000-0000-000000000010';
+    await s.post('/api/mcstory/stories', story(id)).expect(201);
+    expect((await s.get(`/api/mcstory/stories/${id}`).expect(200)).body.story.title).toBe('The Fall of the Nether Gate');
+
+    s.at.value = new Date('2026-03-01T00:00:00.000Z');
+    const edit = { title: 'The Return', content: 'He came back twice.', account_type: 'clan', account_uuid: OTHER, source: 'mcstory' };
+    const updated = (await s.put(`/api/mcstory/stories/${id}`, edit).expect(200)).body.story;
+    expect(updated).toMatchObject({ id, ...edit, created_at: '2026-01-01T00:00:00.000Z' });
+    expect((await s.get(`/api/mcstory/stories/${id}`).expect(200)).body.story).toEqual(updated);
+
+    const world = (await s.put(`/api/mcstory/stories/${id}`, { ...edit, account_type: null, account_uuid: null }).expect(200)).body.story;
+    expect(world.account_type).toBeNull();
+    expect((await s.get(`/api/mcstory/stories?limit=10`)).body.stories).toHaveLength(1);
+  });
+
+  it('answers 404 for a missing story and never creates one on update', async () => {
+    const id = 'aaaaaaaa-0000-0000-0000-000000000011';
+    expect((await s.get(`/api/mcstory/stories/${id}`)).body.error.code).toBe('story_not_found');
+    const edit = { title: 'X', content: 'Y', source: 'z' };
+    expect((await s.put(`/api/mcstory/stories/${id}`, edit)).status).toBe(404);
+    expect((await s.get('/api/mcstory/stories')).body.stories).toEqual([]);
+    expect((await s.put('/api/mcstory/stories/not-a-uuid', edit)).status).toBe(400);
+    await s.post('/api/mcstory/stories', story(id)).expect(201);
+    expect((await s.put(`/api/mcstory/stories/${id}`, { ...edit, account_type: 'clan' })).status).toBe(400);
+  });
+
   it('takes the account type and UUID together or not at all', async () => {
     const half = story('aaaaaaaa-0000-0000-0000-000000000008', { account_type: null });
     expect((await s.post('/api/mcstory/stories', half)).status).toBe(400);

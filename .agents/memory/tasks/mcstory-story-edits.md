@@ -40,3 +40,11 @@ The client half lands in MCIpos/mcstory 0.3.0, after this release.
 ### Task 1 — plan/mcstory-story-edits
 
 This record and its row in `.agents/index/memory-index.md`.
+
+### Task 2 — feat/story-edits
+
+`CentralStoryRepository.story(id)` and `updateStory(id, edit)` (one transaction; keeps `id` and
+`created_at`), with `GET /stories/:id` and `PUT /stories/:id` (`404 story_not_found` for both;
+the update body takes the same fields and account-pair rule as `POST`). Two tests cover reading,
+updating, moving a story to the world, the `404`s, a malformed id and a half account.
+`central-api.md` lists both routes.

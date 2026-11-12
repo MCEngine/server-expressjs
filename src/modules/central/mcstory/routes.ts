@@ -21,19 +21,28 @@ const achievementKey = z
  */
 const accountType = z.string().regex(/^[a-z][a-z0-9_]{0,49}$/, 'Not an account type.');
 
+const storyFields = {
+  title,
+  content: z.string().trim().min(1).max(20_000),
+  account_type: accountType.nullable().default(null),
+  account_uuid: uuidSchema.nullable().default(null),
+  source,
+};
+
+/** Both account fields given, or neither: a story about the world has no account. */
+const pairedAccount = {
+  message: 'account_type and account_uuid are given together or not at all.',
+  path: ['account_uuid'],
+};
+
 const storySchema = z
-  .object({
-    id: uuidSchema,
-    title,
-    content: z.string().trim().min(1).max(20_000),
-    account_type: accountType.nullable().default(null),
-    account_uuid: uuidSchema.nullable().default(null),
-    source,
-  })
-  .refine((s) => (s.account_type === null) === (s.account_uuid === null), {
-    message: 'account_type and account_uuid are given together or not at all.',
-    path: ['account_uuid'],
-  });
+  .object({ id: uuidSchema, ...storyFields })
+  .refine((s) => (s.account_type === null) === (s.account_uuid === null), pairedAccount);
+
+/** An update replaces everything but the id and the archive time. */
+const storyEditSchema = z
+  .object(storyFields)
+  .refine((s) => (s.account_type === null) === (s.account_uuid === null), pairedAccount);
 
 /** Reads the `:accountType/:accountUuid` pair every account route starts with. */
 function accountParam(req: Parameters<typeof uuidParam>[0]): AccountKey {
@@ -67,6 +76,18 @@ export function createCentralStoryRouter(repo: CentralStoryRepository, clock: Cl
   router.get('/stories', async (req, res) => {
     const { limit } = limitQuery.parse(req.query);
     res.json({ stories: await repo.recentStories(limit) });
+  });
+
+  router.get('/stories/:id', async (req, res) => {
+    const story = await repo.story(uuidParam(req, 'id'));
+    if (story === undefined) throw errors.notFound('story_not_found', 'No story with this id is archived.');
+    res.json({ story });
+  });
+
+  router.put('/stories/:id', async (req, res) => {
+    const story = await repo.updateStory(uuidParam(req, 'id'), storyEditSchema.parse(req.body));
+    if (story === undefined) throw errors.notFound('story_not_found', 'No story with this id is archived.');
+    res.json({ story });
   });
 
   router.get('/accounts/:accountType/:accountUuid/stories', async (req, res) => {
