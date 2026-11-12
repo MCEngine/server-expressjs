@@ -26,5 +26,6 @@ the same commit.
 | [`0/2/0`](../../wiki/logs/0/2/0/CHANGELOG.md) | MCStory's story archive under `/api/mcstory`: stories and achievements, migration `008`. | `CHANGELOG.md` |
 | [`0/3/0`](../../wiki/logs/0/3/0/CHANGELOG.md) | MCStory's archive keyed by `account_type` + `account_uuid`: `/accounts` routes, migration `009`. | `CHANGELOG.md` |
 | [`0/4/0`](../../wiki/logs/0/4/0/CHANGELOG.md) | A `DELETE` route for MCPackage's central package records, for `/package uninstall`. | `CHANGELOG.md` |
+| [`0/5/0`](../../wiki/logs/0/5/0/CHANGELOG.md) | Read and update one MCStory story by id, for `/story create <prompt>`. | `CHANGELOG.md` |
 | [`0/1/0`](../../wiki/logs/0/1/0/CHANGELOG.md) | The central server for every plugin: shared-secret routes for the MCIdentity family, economy, MCAgents, membership, chat, packages and MCLog, and the `ask_global` brain. | `CHANGELOG.md` |
 | [`0/0/0`](../../wiki/logs/0/0/0/CHANGELOG.md) | Pre-release. The agent instruction system, and the central server built up task by task. | `CHANGELOG.md` |

@@ -7,6 +7,12 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
+## As of 0.5.0
+
+**MCStory can read and update one story** — `GET` and `PUT /api/mcstory/stories/:id`, keeping
+the id and `created_at`, for MCStory 0.3.0's `/story create <prompt>`, plan
+`../tasks/mcstory-story-edits.md`. Everything below still holds.
+
 ## As of 0.4.0
 
 **MCPackage can remove a central record** — `DELETE /api/mcpackage/servers/:serverId/packages`
