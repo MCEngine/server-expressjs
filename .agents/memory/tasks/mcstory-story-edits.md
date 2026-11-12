@@ -48,3 +48,8 @@ This record and its row in `.agents/index/memory-index.md`.
 the update body takes the same fields and account-pair rule as `POST`). Two tests cover reading,
 updating, moving a story to the world, the `404`s, a malformed id and a half account.
 `central-api.md` lists both routes.
+
+### Task 3 — release/0.5.0
+
+`version` 0.4.0 → 0.5.0 in `package.json` and `package-lock.json`, `wiki/logs/0/5/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and the repository state record. Closes this plan.
