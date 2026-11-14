@@ -68,3 +68,9 @@ isolation.
 
 `wiki/information/central-api.md` documents both prefixes, the shared routes, the page routes
 and MCRealm's realm routes; `wiki/information/data-model.md` describes migration `010`.
+
+### Task 4 — release/0.7.0
+
+`version` 0.6.0 → 0.7.0 in `package.json` and `package-lock.json`, `wiki/logs/0/7/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and the repository state record. Closes this plan;
+the pull request numbers are in the chain's first pull request.
