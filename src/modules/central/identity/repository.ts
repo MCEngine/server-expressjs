@@ -14,16 +14,13 @@ export const STAT_KEYS = [
 ] as const;
 
 export type StatKey = (typeof STAT_KEYS)[number];
-export type Stats = Record<StatKey, number>;
 
-export interface IdentityProperties {
-  alias: string | null;
+/** The nine stats and the unspent stat points of one player. */
+export type Stats = Record<StatKey, number> & { statPoints: number };
+
+export interface Progress {
   level: number;
   exp: number;
-  statPoints: number;
-  headText: string | null;
-  inventoryContents: string | null;
-  enderchestContents: string | null;
 }
 
 export interface CatalogueEntry {
@@ -37,71 +34,53 @@ export type SlotKind = 'skills' | 'runes';
 
 /**
  * Every query the MCIdentity family's central routes run. No rules live here:
- * what the plugin would refuse, the routes refuse before calling in.
+ * what the plugin would refuse, the routes refuse before calling in. Every
+ * player row is keyed by the player UUID.
  */
 export interface CentralIdentityRepository {
   addProfession(systemCode: string, displayName: string, at: string): Promise<void>;
   professions(): Promise<{ systemCode: string; displayName: string }[]>;
   professionExists(systemCode: string): Promise<boolean>;
 
-  /** False when an identity with this UUID already exists. */
-  createIdentity(input: {
-    uuid: string;
-    professionCode: string;
-    properties: Omit<IdentityProperties, 'alias' | 'inventoryContents' | 'enderchestContents'>;
-    stats: Stats;
-    at: string;
-  }): Promise<boolean>;
-  professionOf(uuid: string): Promise<string | undefined>;
-  properties(uuid: string): Promise<IdentityProperties | undefined>;
-  updateProperties(
-    uuid: string,
-    properties: Omit<IdentityProperties, 'alias'>,
-    at: string,
-  ): Promise<boolean>;
-  byAlias(aliasKey: string): Promise<string | undefined>;
-  /** `taken` when another identity already holds the alias. */
-  setAlias(uuid: string, alias: string | null, at: string): Promise<'ok' | 'missing' | 'taken'>;
+  /** Creates the player's stats row; false when the player already has one. */
+  createPlayer(playerUuid: string, stats: Stats, at: string): Promise<boolean>;
+  stats(playerUuid: string): Promise<Stats | undefined>;
+  updateStats(playerUuid: string, stats: Stats, at: string): Promise<boolean>;
+  addStat(playerUuid: string, key: StatKey, amount: number, at: string): Promise<boolean>;
 
-  stats(uuid: string): Promise<Stats | undefined>;
-  updateStats(uuid: string, stats: Stats, at: string): Promise<boolean>;
-  addStat(uuid: string, key: StatKey, amount: number, at: string): Promise<boolean>;
+  activeProfession(playerUuid: string): Promise<string | undefined>;
+  setActiveProfession(playerUuid: string, professionCode: string, at: string): Promise<void>;
 
-  session(playerUuid: string): Promise<{ identityUuid: string; contentKey: string | null } | undefined>;
-  /** Puts the player in this identity, taking it off whoever wore it before. */
-  setSession(playerUuid: string, identityUuid: string, contentKey: string | null, at: string): Promise<boolean>;
-  clearSession(playerUuid: string): Promise<void>;
-  setContentKey(playerUuid: string, contentKey: string | null): Promise<void>;
+  progress(playerUuid: string, professionCode: string): Promise<Progress | undefined>;
+  saveProgress(playerUuid: string, professionCode: string, progress: Progress, at: string): Promise<void>;
 
-  log(playerUuid: string, identityUuid: string, actionType: string, at: string): Promise<void>;
-
-  baseSlots(playerUuid: string): Promise<number>;
-  addBaseSlots(playerUuid: string, amount: number, at: string): Promise<number>;
+  log(playerUuid: string, professionCode: string, actionType: string, at: string): Promise<void>;
 
   addCatalogue(kind: SlotKind, entry: CatalogueEntry, at: string): Promise<void>;
   catalogue(kind: SlotKind): Promise<CatalogueEntry[]>;
-  equipped(kind: SlotKind, identityUuid: string): Promise<Record<string, string>>;
-  equip(kind: SlotKind, identityUuid: string, slot: number, value: string | null, at: string): Promise<void>;
+  equipped(kind: SlotKind, playerUuid: string): Promise<Record<string, string>>;
+  equip(kind: SlotKind, playerUuid: string, slot: number, value: string | null, at: string): Promise<void>;
 
-  cosmetics(identityUuid: string): Promise<{ skin: string | null; aura: string | null } | undefined>;
+  cosmetics(playerUuid: string): Promise<{ skin: string | null; aura: string | null } | undefined>;
   saveCosmetics(
-    identityUuid: string,
+    playerUuid: string,
     patch: { skin?: string | null | undefined; aura?: string | null | undefined },
     at: string,
   ): Promise<void>;
 }
 
-const statsOf = (row: Stats): Stats =>
-  Object.fromEntries(STAT_KEYS.map((key) => [key, row[key]])) as Stats;
+const statsOf = (row: Record<StatKey, number> & { stat_points: number }): Stats =>
+  ({
+    statPoints: row.stat_points,
+    ...Object.fromEntries(STAT_KEYS.map((key) => [key, row[key]])),
+  }) as Stats;
+
+const statColumns = (stats: Stats) => {
+  const { statPoints, ...rest } = stats;
+  return { stat_points: statPoints, ...rest };
+};
 
 export function createCentralIdentityRepository(db: Kysely<Database>): CentralIdentityRepository {
-  const exists = async (uuid: string) =>
-    (await db
-      .selectFrom('mcidentity_identities')
-      .select('uuid')
-      .where('uuid', '=', uuid)
-      .executeTakeFirst()) !== undefined;
-
   return {
     async addProfession(systemCode, displayName, at) {
       // The plugin registers every profession it loads on every start, so a
@@ -142,216 +121,111 @@ export function createCentralIdentityRepository(db: Kysely<Database>): CentralId
       );
     },
 
-    async createIdentity({ uuid, professionCode, properties, stats, at }) {
+    async createPlayer(playerUuid, stats, at) {
       return db.transaction().execute(async (trx) => {
-        const taken = await trx
-          .selectFrom('mcidentity_identities')
-          .select('uuid')
-          .where('uuid', '=', uuid)
+        const known = await trx
+          .selectFrom('mcidentity_player_stats')
+          .select('player_uuid')
+          .where('player_uuid', '=', playerUuid)
           .executeTakeFirst();
-        if (taken !== undefined) return false;
-
+        if (known !== undefined) return false;
         await trx
-          .insertInto('mcidentity_identities')
-          .values({
-            uuid,
-            profession_code: professionCode,
-            alias: null,
-            alias_key: null,
-            level: properties.level,
-            exp: properties.exp,
-            stat_points: properties.statPoints,
-            head_text: properties.headText,
-            inventory_contents: null,
-            enderchest_contents: null,
-            created_at: at,
-            updated_at: at,
-          })
-          .execute();
-        await trx
-          .insertInto('mcidentity_stats')
-          .values({ identity_uuid: uuid, ...stats, updated_at: at })
+          .insertInto('mcidentity_player_stats')
+          .values({ player_uuid: playerUuid, ...statColumns(stats), updated_at: at })
           .execute();
         return true;
       });
     },
 
-    async professionOf(uuid) {
+    async stats(playerUuid) {
       const row = await db
-        .selectFrom('mcidentity_identities')
-        .select('profession_code')
-        .where('uuid', '=', uuid)
-        .executeTakeFirst();
-      return row?.profession_code;
-    },
-
-    async properties(uuid) {
-      const row = await db
-        .selectFrom('mcidentity_identities')
+        .selectFrom('mcidentity_player_stats')
         .selectAll()
-        .where('uuid', '=', uuid)
-        .executeTakeFirst();
-      if (row === undefined) return undefined;
-      return {
-        alias: row.alias,
-        level: row.level,
-        exp: row.exp,
-        statPoints: row.stat_points,
-        headText: row.head_text,
-        inventoryContents: row.inventory_contents,
-        enderchestContents: row.enderchest_contents,
-      };
-    },
-
-    async updateProperties(uuid, p, at) {
-      const result = await db
-        .updateTable('mcidentity_identities')
-        .set({
-          level: p.level,
-          exp: p.exp,
-          stat_points: p.statPoints,
-          head_text: p.headText,
-          inventory_contents: p.inventoryContents,
-          enderchest_contents: p.enderchestContents,
-          updated_at: at,
-        })
-        .where('uuid', '=', uuid)
-        .executeTakeFirst();
-      return Number(result.numUpdatedRows) > 0;
-    },
-
-    async byAlias(aliasKey) {
-      const row = await db
-        .selectFrom('mcidentity_identities')
-        .select('uuid')
-        .where('alias_key', '=', aliasKey)
-        .executeTakeFirst();
-      return row?.uuid;
-    },
-
-    async setAlias(uuid, alias, at) {
-      return db.transaction().execute(async (trx) => {
-        const key = alias === null ? null : alias.toLowerCase();
-        if (key !== null) {
-          const holder = await trx
-            .selectFrom('mcidentity_identities')
-            .select('uuid')
-            .where('alias_key', '=', key)
-            .executeTakeFirst();
-          if (holder !== undefined && holder.uuid !== uuid) return 'taken' as const;
-        }
-        const result = await trx
-          .updateTable('mcidentity_identities')
-          .set({ alias, alias_key: key, updated_at: at })
-          .where('uuid', '=', uuid)
-          .executeTakeFirst();
-        return Number(result.numUpdatedRows) > 0 ? ('ok' as const) : ('missing' as const);
-      });
-    },
-
-    async stats(uuid) {
-      const row = await db
-        .selectFrom('mcidentity_stats')
-        .selectAll()
-        .where('identity_uuid', '=', uuid)
+        .where('player_uuid', '=', playerUuid)
         .executeTakeFirst();
       return row === undefined ? undefined : statsOf(row);
     },
 
-    async updateStats(uuid, stats, at) {
+    async updateStats(playerUuid, stats, at) {
       const result = await db
-        .updateTable('mcidentity_stats')
-        .set({ ...stats, updated_at: at })
-        .where('identity_uuid', '=', uuid)
+        .updateTable('mcidentity_player_stats')
+        .set({ ...statColumns(stats), updated_at: at })
+        .where('player_uuid', '=', playerUuid)
         .executeTakeFirst();
       return Number(result.numUpdatedRows) > 0;
     },
 
-    async addStat(uuid, key, amount, at) {
+    async addStat(playerUuid, key, amount, at) {
       // One statement, so two servers adding at once both land.
       const result = await db
-        .updateTable('mcidentity_stats')
+        .updateTable('mcidentity_player_stats')
         .set((eb) => ({ [key]: eb(key, '+', amount), updated_at: at }))
-        .where('identity_uuid', '=', uuid)
+        .where('player_uuid', '=', playerUuid)
         .executeTakeFirst();
       return Number(result.numUpdatedRows) > 0;
     },
 
-    async session(playerUuid) {
+    async activeProfession(playerUuid) {
       const row = await db
-        .selectFrom('mcidentity_sessions')
-        .select(['identity_uuid', 'content_key'])
+        .selectFrom('mcidentity_player_professions')
+        .select('profession_code')
         .where('player_uuid', '=', playerUuid)
         .executeTakeFirst();
-      return row === undefined ? undefined : { identityUuid: row.identity_uuid, contentKey: row.content_key };
+      return row?.profession_code;
     },
 
-    async setSession(playerUuid, identityUuid, contentKey, at) {
-      if (!(await exists(identityUuid))) return false;
+    async setActiveProfession(playerUuid, professionCode, at) {
       await db.transaction().execute(async (trx) => {
-        await trx
-          .deleteFrom('mcidentity_sessions')
-          .where((eb) => eb.or([eb('player_uuid', '=', playerUuid), eb('identity_uuid', '=', identityUuid)]))
-          .execute();
-        await trx
-          .insertInto('mcidentity_sessions')
-          .values({ player_uuid: playerUuid, identity_uuid: identityUuid, content_key: contentKey, equipped_at: at })
-          .execute();
-      });
-      return true;
-    },
-
-    async clearSession(playerUuid) {
-      await db.deleteFrom('mcidentity_sessions').where('player_uuid', '=', playerUuid).execute();
-    },
-
-    async setContentKey(playerUuid, contentKey) {
-      await db
-        .updateTable('mcidentity_sessions')
-        .set({ content_key: contentKey })
-        .where('player_uuid', '=', playerUuid)
-        .execute();
-    },
-
-    async log(playerUuid, identityUuid, actionType, at) {
-      await db
-        .insertInto('mcidentity_logs')
-        .values({ player_uuid: playerUuid, identity_uuid: identityUuid, action_type: actionType, created_at: at })
-        .execute();
-    },
-
-    async baseSlots(playerUuid) {
-      const row = await db
-        .selectFrom('mcidentity_base_slots')
-        .select('slots')
-        .where('player_uuid', '=', playerUuid)
-        .executeTakeFirst();
-      return row?.slots ?? 0;
-    },
-
-    async addBaseSlots(playerUuid, amount, at) {
-      return db.transaction().execute(async (trx) => {
-        const row = await trx
-          .selectFrom('mcidentity_base_slots')
-          .select('slots')
+        const result = await trx
+          .updateTable('mcidentity_player_professions')
+          .set({ profession_code: professionCode, equipped_at: at })
           .where('player_uuid', '=', playerUuid)
           .executeTakeFirst();
-        // Never below zero, as the plugin's own backends clamp it.
-        const slots = Math.max(0, (row?.slots ?? 0) + amount);
-        if (row === undefined) {
-          await trx
-            .insertInto('mcidentity_base_slots')
-            .values({ player_uuid: playerUuid, slots, updated_at: at })
-            .execute();
-        } else {
-          await trx
-            .updateTable('mcidentity_base_slots')
-            .set({ slots, updated_at: at })
-            .where('player_uuid', '=', playerUuid)
-            .execute();
-        }
-        return slots;
+        if (Number(result.numUpdatedRows) > 0) return;
+        await trx
+          .insertInto('mcidentity_player_professions')
+          .values({ player_uuid: playerUuid, profession_code: professionCode, equipped_at: at })
+          .execute();
       });
+    },
+
+    async progress(playerUuid, professionCode) {
+      const row = await db
+        .selectFrom('mcidentity_player_profession_progress')
+        .select(['level', 'exp'])
+        .where('player_uuid', '=', playerUuid)
+        .where('profession_code', '=', professionCode)
+        .executeTakeFirst();
+      return row === undefined ? undefined : { level: row.level, exp: row.exp };
+    },
+
+    async saveProgress(playerUuid, professionCode, progress, at) {
+      await db.transaction().execute(async (trx) => {
+        const result = await trx
+          .updateTable('mcidentity_player_profession_progress')
+          .set({ level: progress.level, exp: progress.exp, updated_at: at })
+          .where('player_uuid', '=', playerUuid)
+          .where('profession_code', '=', professionCode)
+          .executeTakeFirst();
+        if (Number(result.numUpdatedRows) > 0) return;
+        await trx
+          .insertInto('mcidentity_player_profession_progress')
+          .values({
+            player_uuid: playerUuid,
+            profession_code: professionCode,
+            level: progress.level,
+            exp: progress.exp,
+            updated_at: at,
+          })
+          .execute();
+      });
+    },
+
+    async log(playerUuid, professionCode, actionType, at) {
+      await db
+        .insertInto('mcidentity_profession_logs')
+        .values({ player_uuid: playerUuid, profession_code: professionCode, action_type: actionType, created_at: at })
+        .execute();
     },
 
     async addCatalogue(kind, entry, at) {
@@ -384,48 +258,48 @@ export function createCentralIdentityRepository(db: Kysely<Database>): CentralId
       return rows.map((r) => ({ systemCode: r.system_code, displayName: r.display_name, item: r.item }));
     },
 
-    async equipped(kind, identityUuid) {
+    async equipped(kind, playerUuid) {
       const rows = await db
         .selectFrom(`mcidentity_equipped_${kind}`)
         .select(['slot', 'item_code'])
-        .where('identity_uuid', '=', identityUuid)
+        .where('player_uuid', '=', playerUuid)
         .orderBy('slot')
         .execute();
       return Object.fromEntries(rows.map((r) => [String(r.slot), r.item_code]));
     },
 
-    async equip(kind, identityUuid, slot, value, at) {
+    async equip(kind, playerUuid, slot, value, at) {
       const table = `mcidentity_equipped_${kind}` as const;
       await db.transaction().execute(async (trx) => {
         await trx
           .deleteFrom(table)
-          .where('identity_uuid', '=', identityUuid)
+          .where('player_uuid', '=', playerUuid)
           .where('slot', '=', slot)
           .execute();
         if (value !== null) {
           await trx
             .insertInto(table)
-            .values({ identity_uuid: identityUuid, slot, item_code: value, updated_at: at })
+            .values({ player_uuid: playerUuid, slot, item_code: value, updated_at: at })
             .execute();
         }
       });
     },
 
-    async cosmetics(identityUuid) {
+    async cosmetics(playerUuid) {
       const row = await db
         .selectFrom('mcidentity_cosmetics')
         .select(['skin', 'aura'])
-        .where('identity_uuid', '=', identityUuid)
+        .where('player_uuid', '=', playerUuid)
         .executeTakeFirst();
       return row;
     },
 
-    async saveCosmetics(identityUuid, patch, at) {
+    async saveCosmetics(playerUuid, patch, at) {
       await db.transaction().execute(async (trx) => {
         const row = await trx
           .selectFrom('mcidentity_cosmetics')
           .select(['skin', 'aura'])
-          .where('identity_uuid', '=', identityUuid)
+          .where('player_uuid', '=', playerUuid)
           .executeTakeFirst();
         const next = {
           skin: patch.skin !== undefined ? patch.skin : (row?.skin ?? null),
@@ -434,13 +308,13 @@ export function createCentralIdentityRepository(db: Kysely<Database>): CentralId
         if (row === undefined) {
           await trx
             .insertInto('mcidentity_cosmetics')
-            .values({ identity_uuid: identityUuid, ...next, updated_at: at })
+            .values({ player_uuid: playerUuid, ...next, updated_at: at })
             .execute();
         } else {
           await trx
             .updateTable('mcidentity_cosmetics')
             .set({ ...next, updated_at: at })
-            .where('identity_uuid', '=', identityUuid)
+            .where('player_uuid', '=', playerUuid)
             .execute();
         }
       });

@@ -43,3 +43,12 @@ carry is now the player UUID.
 ### Task 1 — plan/profession-wearing
 
 This record and its row in `.agents/index/memory-index.md`.
+
+### Task 2 — refactor/profession-wearing
+
+Migration `003` rewritten in place: `mcidentity_player_stats`, `mcidentity_player_professions`,
+`mcidentity_player_profession_progress` and `mcidentity_profession_logs` replace the identity,
+stats, session, log and base slot tables; the add-on slot and cosmetic tables key by
+`player_uuid`. The repository and routes serve the 5.0.0 client's player routes; the old
+identity, alias, session, base slot and `/v1/logs` routes are gone. Tests rewritten (358 pass);
+`central-api.md` and `data-model.md` updated.

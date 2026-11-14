@@ -47,29 +47,25 @@ rejection is `400 validation_failed` with the failing fields.
 
 ## MCIdentity family — `/v1`
 
-Reads answer `404` when there is nothing to read; the client turns that into its neutral value
-(empty, zero). Writes answer `204` unless noted.
+Since MCIdentity 5.0.0 a player has one character, keyed by the player UUID, and wears one
+profession at a time. Every `:uuid` below is a player UUID, including the add-on routes that
+keep their `/v1/identities/:uuid/...` paths. Reads answer `404` when there is nothing to read;
+the client turns that into its neutral value (empty, zero). Writes answer `204` unless noted.
 
 | Method | Path | Body | Answer |
 |---|---|---|---|
 | `POST` | `/v1/professions` | `{systemCode, displayName}` | `204`. A code already registered keeps its first name. |
 | `GET` | `/v1/professions` | | `[{systemCode, displayName}]` |
-| `POST` | `/v1/identities` | `{uuid, professionCode, properties: {level, exp, statPoints, headText}, stats: {…nine}}` | `201`; `409 identity_exists`; `422 unknown_profession` |
-| `GET` | `/v1/identities/:uuid` | | `{uuid, professionCode}` |
-| `GET` | `/v1/identities/:uuid/properties` | | `{alias, level, exp, statPoints, headText, inventoryContents, enderchestContents}` |
-| `PUT` | `/v1/identities/:uuid/properties` | the same, without `alias` | |
-| `PUT` | `/v1/identities/:uuid/alias` | `{alias}`, `null` clears | `409 alias_taken` when another identity holds it, ignoring case |
-| `GET` | `/v1/identities/alias/:alias` | | `{uuid}`, matched ignoring case |
-| `GET` | `/v1/identities/:uuid/stats` | | `{energy, health, food, strength, defense, wisdom, luck, agility, resilience}` |
-| `PUT` | `/v1/identities/:uuid/stats` | all nine | |
-| `GET` | `/v1/identities/:uuid/stats/:key` | | `{value}`; an unknown key is `400 unknown_stat` |
-| `POST` | `/v1/identities/:uuid/stats/:key/add` | `{amount}` | Added in one statement, so concurrent adds all land |
-| `GET` | `/v1/players/:uuid/session` | | `{identityUuid, contentKey}` |
-| `PUT` | `/v1/players/:uuid/session` | `{identityUuid, contentKey}` | `null` identity ends the session. An identity is worn by one player: it is taken off anyone else. |
-| `PATCH` | `/v1/players/:uuid/session/content-key` | `{contentKey}` | |
-| `GET` | `/v1/players/:uuid/base-slots` | | `{slots}`, `0` for a player never seen |
-| `POST` | `/v1/players/:uuid/base-slots/add` | `{amount}` | `{slots}`, never below zero |
-| `POST` | `/v1/logs` | `{playerUuid, identityUuid, actionType}` | |
+| `POST` | `/v1/players` | `{playerUuid, stats: {statPoints, …nine}}` | `201` when created, `200` when the player already exists (kept unchanged) |
+| `GET` | `/v1/players/:uuid/stats` | | `{statPoints, energy, health, food, strength, defense, wisdom, luck, agility, resilience}` |
+| `PUT` | `/v1/players/:uuid/stats` | all ten | `404 player_not_found` for a player never created |
+| `GET` | `/v1/players/:uuid/stats/:key` | | `{value}`; an unknown key is `400 unknown_stat` |
+| `POST` | `/v1/players/:uuid/stats/:key/add` | `{amount}` | Added in one statement, so concurrent adds all land |
+| `GET` | `/v1/players/:uuid/profession` | | `{professionCode}`; `404 profession_not_worn` |
+| `PUT` | `/v1/players/:uuid/profession` | `{professionCode}` | `422 unknown_profession` when the code is not registered |
+| `GET` | `/v1/players/:uuid/professions/:code/progress` | | `{level, exp}`; `404 progress_not_found` when never worn |
+| `PUT` | `/v1/players/:uuid/professions/:code/progress` | `{level, exp}` | Creates or replaces |
+| `POST` | `/v1/profession-logs` | `{playerUuid, professionCode, actionType}` | |
 | `POST` | `/v1/skills`, `/v1/runes` | `{systemCode, displayName, item}` | Registering again replaces the name and item |
 | `GET` | `/v1/skills`, `/v1/runes` | | `[{systemCode, displayName, item}]` |
 | `GET` | `/v1/identities/:uuid/skills`, `…/runes` | | `{"<slot>": "<code>"}` |
@@ -195,8 +191,7 @@ stored. Search ranks every log embedded with the same model by cosine similarity
 
 The network's story archive: the lore MCStory's agent writes and the achievements it awards.
 Both belong to an **account**, an `account_type` plus an `account_uuid`, as MCEconomy keys
-wallets: `player` with the player UUID, `identity` with an MCIdentity identity UUID, `clan` with
-a clan UUID, or any type another plugin defines. A type is lower-case snake_case of at most 50
+wallets: `player` with the player UUID, `clan` with a clan UUID, or any type another plugin defines. A type is lower-case snake_case of at most 50
 characters, and the same UUID under two types is two accounts.
 
 A story's id is the UUID MCStory generated for it, so a story keeps one id wherever it was
