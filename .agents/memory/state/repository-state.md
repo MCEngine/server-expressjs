@@ -7,6 +7,12 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
+## As of 0.7.0
+
+**MCMultiverse and MCRealm have central storage** — `/api/mcmultiverse` and `/api/mcrealm`,
+migration `010-central-universe`, plan `../tasks/multiverse-realm-central.md`. Everything below
+still holds.
+
 ## As of 0.6.0
 
 **MCIdentity data is keyed by the player UUID** — player stats, worn profession, per profession
