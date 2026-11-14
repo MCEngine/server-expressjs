@@ -12,6 +12,11 @@ import { createCentralPackageRepository, createCentralPackageRouter, type Centra
 import { createCentralLogRepository, createCentralLogRouter, type CentralLogRepository } from './mclog/index.js';
 import { createCentralStoryRepository, createCentralStoryRouter, type CentralStoryRepository } from './mcstory/index.js';
 import {
+  createCentralMultiverseRouter,
+  createCentralMultiverseServices,
+  type CentralMultiverseServices,
+} from './mcmultiverse/index.js';
+import {
   createBrainRouter,
   createBrainService,
   createKnowledgeRepository,
@@ -38,6 +43,7 @@ export interface CentralServices {
   readonly packages: CentralPackageRepository;
   readonly logs: CentralLogRepository;
   readonly stories: CentralStoryRepository;
+  readonly multiverse: CentralMultiverseServices;
   readonly knowledge: KnowledgeRepository;
   readonly brain: BrainService;
 }
@@ -79,6 +85,7 @@ export function createCentralServices(
     packages: createCentralPackageRepository(db),
     logs,
     stories: createCentralStoryRepository(db),
+    multiverse: createCentralMultiverseServices(db),
     knowledge,
     brain,
   };
@@ -103,4 +110,5 @@ export function mountCentral(app: Express, central: CentralServices, secret: str
   app.use('/api/mcpackage', guard, createCentralPackageRouter(central.packages, central.clock));
   app.use('/api/mclog', guard, createCentralLogRouter(central.logs, central.clock));
   app.use('/api/mcstory', guard, createCentralStoryRouter(central.stories, central.clock));
+  app.use('/api/mcmultiverse', guard, createCentralMultiverseRouter(central.multiverse, central.clock));
 }
