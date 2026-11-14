@@ -74,6 +74,10 @@ export function createApp({ config, logger, probes = [], services = {} }: AppOpt
   // A hard ceiling on JSON bodies. Artifact uploads are multipart and are
   // handled by their own route with its own limit; nothing else here has any
   // business being large.
+  // The exception: MCMultiverse and MCRealm save every inventory and ender
+  // chest page of a player in one request when the player leaves. Parsed here
+  // first, so the general parser below sees a body already read and skips it.
+  app.use(['/api/mcmultiverse', '/api/mcrealm'], express.json({ limit: '8mb' }));
   app.use(express.json({ limit: '1mb' }));
 
   app.use(createHealthRouter(probes));
