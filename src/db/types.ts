@@ -21,6 +21,12 @@ export interface DialectTypes {
   readonly boolean: string;
   readonly bigint: string;
   readonly text: string;
+  /**
+   * A string longer than the 64 KB a MySQL `text` holds, such as Base64 item
+   * contents. `mediumtext` on MySQL and MariaDB; plain `text` elsewhere, which
+   * has no such ceiling.
+   */
+  readonly longText: string;
   readonly json: string;
   /**
    * An auto-numbered integer key, for the plugin tables whose clients parse an
@@ -47,6 +53,7 @@ const SQLITE: DialectTypes = {
   boolean: 'integer',
   bigint: 'integer',
   text: 'text',
+  longText: 'text',
   json: 'text',
   serial: 'integer',
   serialNeedsAutoIncrement: true,
@@ -60,6 +67,7 @@ const POSTGRES: DialectTypes = {
   boolean: 'boolean',
   bigint: 'bigint',
   text: 'text',
+  longText: 'text',
   json: 'jsonb',
   serial: 'serial',
   serialNeedsAutoIncrement: false,
@@ -77,6 +85,7 @@ const MYSQL = (provider: 'mysql' | 'mariadb'): DialectTypes => ({
   // MySQL cannot index a `text` column without a prefix length, so anything
   // that might be indexed uses `varchar` and anything long uses `text`.
   text: 'text',
+  longText: 'mediumtext',
   json: 'json',
   serial: 'integer',
   serialNeedsAutoIncrement: true,

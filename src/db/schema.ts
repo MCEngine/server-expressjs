@@ -552,6 +552,109 @@ export interface McstoryAchievementsTable {
   awarded_at: Timestamp;
 }
 
+/** An account as MCMultiverse and MCRealm key it: a type and a UUID. */
+interface UniverseAccountKey {
+  account_type: string;
+  account_uuid: string;
+}
+
+export interface UniverseAccountsTable extends UniverseAccountKey {
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface UniverseAccountPropertyTable extends UniverseAccountKey {
+  inventory_page_limit: number;
+  enderchest_page_limit: number;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface UniverseAccountSessionTable extends UniverseAccountKey {
+  server_id: string;
+  locked_at: Timestamp;
+}
+
+export interface UniverseWorldsTable {
+  id: string;
+  account_type: string | null;
+  account_uuid: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface UniverseWorldPropertyTable {
+  world_id: string;
+  world_name: string;
+  environment: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface UniverseWorldChestTable {
+  id: string;
+  world_id: string;
+  x: number;
+  y: number;
+  z: number;
+  contents: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+/** One page of an inventory or an ender chest. */
+export interface UniversePageTable extends UniverseAccountKey {
+  page_number: number;
+  contents: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface UniverseEquipmentTable extends UniverseAccountKey {
+  contents: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McrealmRealmTypesTable {
+  id: Serial;
+  system_code: string;
+  display_name: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McrealmRealmsTable {
+  id: string;
+  realm_type_id: number;
+  account_type: string | null;
+  account_uuid: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McrealmRealmPropertyTable {
+  realm_id: string;
+  realm_name: string;
+  display_name: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export interface McrealmRealmWorldTable {
+  world_id: string;
+  realm_id: string;
+  created_at: Timestamp;
+}
+
+export interface McrealmPageTable extends UniversePageTable {
+  realm_id: string;
+}
+
+export interface McrealmEquipmentTable extends UniverseEquipmentTable {
+  realm_id: string;
+}
+
 export interface Database {
   accounts: AccountsTable;
   account_profiles: AccountProfilesTable;
@@ -608,6 +711,22 @@ export interface Database {
   mcagents_knowledge_embeddings: McagentsKnowledgeEmbeddingsTable;
   mcstory_stories: McstoryStoriesTable;
   mcstory_achievements: McstoryAchievementsTable;
+  universe_accounts: UniverseAccountsTable;
+  universe_account_property: UniverseAccountPropertyTable;
+  universe_account_session: UniverseAccountSessionTable;
+  universe_worlds: UniverseWorldsTable;
+  universe_world_property: UniverseWorldPropertyTable;
+  universe_world_chest: UniverseWorldChestTable;
+  mcmultiverse_account_inventory: UniversePageTable;
+  mcmultiverse_account_equipment: UniverseEquipmentTable;
+  mcmultiverse_account_enderchest: UniversePageTable;
+  mcrealm_realm_types: McrealmRealmTypesTable;
+  mcrealm_realms: McrealmRealmsTable;
+  mcrealm_realm_property: McrealmRealmPropertyTable;
+  mcrealm_realm_world: McrealmRealmWorldTable;
+  mcrealm_account_inventory: McrealmPageTable;
+  mcrealm_account_equipment: McrealmEquipmentTable;
+  mcrealm_account_enderchest: McrealmPageTable;
 }
 
 export type Account = Selectable<AccountsTable>;
