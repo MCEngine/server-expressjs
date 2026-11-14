@@ -42,6 +42,7 @@ protocol's approval gate. See `{shared}/rules/memory-policy.md`.
 | [`tasks/mcpackage-uninstall.md`](../memory/tasks/mcpackage-uninstall.md) | A `DELETE` route for MCPackage's central package records, for `/package uninstall`: the confirmed plan across two repositories, and one entry per task. |
 | [`tasks/mcstory-story-edits.md`](../memory/tasks/mcstory-story-edits.md) | Read and update one MCStory story by id, for `/story create <prompt>`: the confirmed plan across two repositories, and one entry per task. |
 | [`tasks/mcidentity-profession-wearing.md`](../memory/tasks/mcidentity-profession-wearing.md) | MCIdentity 5.0.0 profession wearing: player keyed central routes and tables, no data migration, and one entry per task. |
+| [`tasks/multiverse-realm-central.md`](../memory/tasks/multiverse-realm-central.md) | Central storage for MCMultiverse and MCRealm under `/api/mcmultiverse` and `/api/mcrealm`: the confirmed plan across three repositories, and one entry per task. |
 
 ## Decisions
 
