@@ -7,6 +7,13 @@ description: What this repository contains right now, what it does not yet, and 
 
 Overwritten in place, always current.
 
+## As of 0.6.0
+
+**MCIdentity data is keyed by the player UUID** — player stats, worn profession, per profession
+progress and profession logs under `/v1/players/...` and `/v1/profession-logs`, for MCIdentity
+5.0.0, plan `../tasks/mcidentity-profession-wearing.md`. The identity, session, base slot and
+`/v1/logs` routes of earlier versions are gone. Everything else below still holds.
+
 ## As of 0.5.0
 
 **MCStory can read and update one story** — `GET` and `PUT /api/mcstory/stories/:id`, keeping

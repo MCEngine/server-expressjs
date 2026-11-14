@@ -52,3 +52,8 @@ stats, session, log and base slot tables; the add-on slot and cosmetic tables ke
 `player_uuid`. The repository and routes serve the 5.0.0 client's player routes; the old
 identity, alias, session, base slot and `/v1/logs` routes are gone. Tests rewritten (358 pass);
 `central-api.md` and `data-model.md` updated.
+
+### Task 3 — release/0.6.0
+
+`version` 0.5.0 → 0.6.0 in `package.json` and `package-lock.json`, `wiki/logs/0/6/0/CHANGELOG.md`
+and its row in `.agents/index/logs-index.md`, and the repository state record. Closes this plan.
