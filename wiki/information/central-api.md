@@ -210,6 +210,54 @@ is lower-case snake_case of at most 64 characters, and an account holds each key
 
 A malformed type answers `400 invalid_account_type`, a malformed UUID `400 invalid_uuid`.
 
+## MCMultiverse and MCRealm — `/api/mcmultiverse` and `/api/mcrealm`
+
+Two plugins, of which a network runs one. MCMultiverse keeps an account's inventory pages,
+ender chest pages and equipment the same in every world; MCRealm keeps them per realm, so
+nothing crosses realms. Both key an account by `account_type` (`player`, `clan`, `guild`, or a
+type another plugin defines, lower-case snake_case up to 50 characters) and `account_uuid`.
+Contents are Base64 strings the plugin writes; this server stores them as given. Both prefixes
+accept JSON bodies up to 8 MB so a player's whole snapshot fits in one request.
+
+Routes on both prefixes:
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `PUT` | `/accounts/:accountType/:accountUuid` | | `201 {account}` when created with one inventory page and one ender chest page, `200` when present |
+| `GET` | `/accounts/:accountType/:accountUuid` | | `{account}` with `inventory_page_limit` and `enderchest_page_limit`; `404 account_not_found` |
+| `PATCH` | `/accounts/:accountType/:accountUuid/property` | `{inventory_page_limit?, enderchest_page_limit?}`, each 1 to 1000 | `{account}`; `404 account_not_found` |
+| `POST` | `/accounts/:accountType/:accountUuid/session` | `{server_id, stale_seconds?}` (default 30) | `{session}` when free, already this server's, or older than `stale_seconds`; `409 session_held` with `held_by` and `locked_at` otherwise |
+| `DELETE` | `/accounts/:accountType/:accountUuid/session` | `{server_id}` | `{released}`; only the holder releases |
+| `GET` | `/worlds` | | `{worlds}` by name |
+| `GET` | `/worlds/by-name/:name` | | `{world}`; `404 world_not_found` |
+| `GET` / `PUT` / `DELETE` | `/worlds/:worldId` | `PUT`: `{world_name, environment?, account_type?, account_uuid?}` | `{world}`; `409 world_name_taken`; `DELETE` is `204` and removes the world's chests |
+| `GET` / `PUT` / `DELETE` | `/worlds/:worldId/chests/:x/:y/:z` | `PUT`: `{contents}` | `{chest}`, one chest block; `404 chest_not_found` or `world_not_found` |
+
+Page routes, under `/api/mcmultiverse/accounts/:accountType/:accountUuid` and
+`/api/mcrealm/realms/:realmId/accounts/:accountType/:accountUuid`:
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/inventory`, `/enderchest` | | `{pages}` by page number |
+| `GET` / `PUT` | `/inventory/:page`, `/enderchest/:page` | `PUT`: `{contents}`; page 1 to 1000 | `{page}`; `404 page_not_found` |
+| `GET` / `PUT` | `/equipment` | `PUT`: `{contents}` | `{equipment}`; `404 equipment_not_found` |
+| `PUT` | `/snapshot` | `{inventory: [{page_number, contents}], equipment, enderchest: [...], release_session: {server_id}?}` | `{saved: true}`; every write and the release in one transaction |
+
+A page write creates the account when it is missing. On `/api/mcrealm` an unknown realm is
+`404 realm_not_found`.
+
+MCRealm only:
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/realm-types` | | `{realm_types}` |
+| `PUT` | `/realm-types/:code` | `{display_name}` | `{realm_type}`, created or renamed |
+| `GET` | `/realms` | | `{realms}` by name, each with its type's `realm_type` code |
+| `POST` | `/realms` | `{id?, realm_type, realm_name, display_name, account_type?, account_uuid?}` | `201 {realm}`; `404 realm_type_not_found`; `409 realm_name_taken` or `realm_exists` |
+| `GET` / `PATCH` / `DELETE` | `/realms/:realmId` | `PATCH`: `{realm_name?, display_name?}` | `{realm}`; `DELETE` is `204`, `409 realm_has_worlds` while a world is in it |
+| `PUT` / `DELETE` | `/realms/:realmId/worlds/:worldId` | | `204`; a world sits in one realm, so `PUT` moves it |
+| `GET` | `/worlds/:worldId/realm` | | `{realm}`; `404 world_not_in_realm` |
+
 ## The central brain — `/api/mcagents/ask_global`
 
 MCAgents' `ask_global` tool hands a question to an agent that runs **here**, separate from the
