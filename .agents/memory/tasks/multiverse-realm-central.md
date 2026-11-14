@@ -51,3 +51,15 @@ The client halves land in MCMultiverse 0.1.0 and MCRealm 0.1.0, after this relea
 ### Task 1 — plan/multiverse-realm-central
 
 This record and its row in `.agents/index/memory-index.md`.
+
+### Task 2 — feat/central-universe
+
+Migration `010-central-universe` creates the six `universe_` tables, the three `mcmultiverse_`
+tables and the seven `mcrealm_` tables, with composite foreign keys into `universe_accounts`;
+`DialectTypes.longText` is `mediumtext` on MySQL and MariaDB. `src/modules/central/universe`
+holds the shared repository (accounts, page limits, the transactional session lock, worlds,
+chest blocks), a page store keyed by an optional scope, and the shared router.
+`/api/mcmultiverse` mounts it with unscoped pages; `/api/mcrealm` adds realm types, realms,
+realm worlds and pages scoped by `realm_id`. Both prefixes parse JSON up to 8 MB. Tests cover
+the migration, every route family, the stale lock takeover, snapshot saves past 1 MB, and realm
+isolation.

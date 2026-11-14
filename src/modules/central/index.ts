@@ -16,6 +16,7 @@ import {
   createCentralMultiverseServices,
   type CentralMultiverseServices,
 } from './mcmultiverse/index.js';
+import { createCentralRealmRouterFor, createCentralRealmServices, type CentralRealmServices } from './mcrealm/index.js';
 import {
   createBrainRouter,
   createBrainService,
@@ -44,6 +45,7 @@ export interface CentralServices {
   readonly logs: CentralLogRepository;
   readonly stories: CentralStoryRepository;
   readonly multiverse: CentralMultiverseServices;
+  readonly realm: CentralRealmServices;
   readonly knowledge: KnowledgeRepository;
   readonly brain: BrainService;
 }
@@ -86,6 +88,7 @@ export function createCentralServices(
     logs,
     stories: createCentralStoryRepository(db),
     multiverse: createCentralMultiverseServices(db),
+    realm: createCentralRealmServices(db),
     knowledge,
     brain,
   };
@@ -111,4 +114,5 @@ export function mountCentral(app: Express, central: CentralServices, secret: str
   app.use('/api/mclog', guard, createCentralLogRouter(central.logs, central.clock));
   app.use('/api/mcstory', guard, createCentralStoryRouter(central.stories, central.clock));
   app.use('/api/mcmultiverse', guard, createCentralMultiverseRouter(central.multiverse, central.clock));
+  app.use('/api/mcrealm', guard, createCentralRealmRouterFor(central.realm, central.clock));
 }
