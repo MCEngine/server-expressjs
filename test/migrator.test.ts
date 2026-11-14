@@ -106,3 +106,45 @@ describe('009-mcstory-accounts', () => {
     }
   });
 });
+
+describe('010-central-universe', () => {
+  it('stores item contents in a type MySQL does not cap at 64 KB', () => {
+    expect(dialectTypes('mysql').longText).toBe('mediumtext');
+    expect(dialectTypes('mariadb').longText).toBe('mediumtext');
+    expect(dialectTypes('postgresql').longText).toBe('text');
+    expect(dialectTypes('sqlite').longText).toBe('text');
+  });
+
+  it('drops and recreates every MCMultiverse and MCRealm table', async () => {
+    const t = await freshDatabase();
+    try {
+      const migration = migrations(dialectTypes('sqlite'))['010-central-universe']!;
+      await migration.down!(t.db);
+      await migration.up(t.db);
+      const tables = await sql<{ name: string }>`
+        select name from sqlite_master
+        where type = 'table' and (name like 'universe_%' or name like 'mcmultiverse_%' or name like 'mcrealm_%')
+        order by name`.execute(t.db);
+      expect(tables.rows.map((r) => r.name)).toEqual([
+        'mcmultiverse_account_enderchest',
+        'mcmultiverse_account_equipment',
+        'mcmultiverse_account_inventory',
+        'mcrealm_account_enderchest',
+        'mcrealm_account_equipment',
+        'mcrealm_account_inventory',
+        'mcrealm_realm_property',
+        'mcrealm_realm_types',
+        'mcrealm_realm_world',
+        'mcrealm_realms',
+        'universe_account_property',
+        'universe_account_session',
+        'universe_accounts',
+        'universe_world_chest',
+        'universe_world_property',
+        'universe_worlds',
+      ]);
+    } finally {
+      await t.destroy();
+    }
+  });
+});
