@@ -450,20 +450,19 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 | Table | Key | Notes |
 |---|---|---|
 | `mcidentity_professions` | `system_code` | |
-| `mcidentity_identities` | `uuid` | Properties live on the identity row. `alias_key` is the lower-cased alias, unique; `NULL` when there is none |
-| `mcidentity_stats` | `identity_uuid` → identities, cascade | The nine stats |
-| `mcidentity_sessions` | `player_uuid` | `identity_uuid` is unique: one identity, one wearer |
-| `mcidentity_logs` | auto-numbered `id` | |
-| `mcidentity_base_slots` | `player_uuid` | |
+| `mcidentity_player_stats` | `player_uuid` | `stat_points` and the nine stats |
+| `mcidentity_player_professions` | `player_uuid` | `profession_code` → professions: the one profession worn |
+| `mcidentity_player_profession_progress` | (`player_uuid`, `profession_code`) | `level` and `exp`, kept while another profession is worn |
+| `mcidentity_profession_logs` | auto-numbered `id` | `player_uuid`, `profession_code`, `action_type` |
 | `mcidentity_skills`, `mcidentity_runes` | `system_code` | The add-ons' catalogues |
-| `mcidentity_equipped_skills`, `mcidentity_equipped_runes` | (`identity_uuid`, `slot`) | No foreign key: an add-on may write before the core plugin's identity lands |
-| `mcidentity_cosmetics` | `identity_uuid` | `skin` and `aura` |
+| `mcidentity_equipped_skills`, `mcidentity_equipped_runes` | (`player_uuid`, `slot`) | No foreign key: an add-on may write before the core plugin's player row lands |
+| `mcidentity_cosmetics` | `player_uuid` | `skin` and `aura` |
 
 ### MCEconomy, Market and SlayerRewards
 
 | Table | Key | Notes |
 |---|---|---|
-| `mceconomy_accounts` | (`account_type`, `account_uuid`) | `account_type` is `player` or `identity` |
+| `mceconomy_accounts` | (`account_type`, `account_uuid`) | `account_type` is `player` for a player's wallet, or a type another plugin defines |
 | `mceconomy_currencies` | auto-numbered `id` | `system_code` unique; `is_transferable` |
 | `mceconomy_wallets` | (`account_type`, `account_uuid`, `currency_id`) | → accounts, cascade; → currencies. `amount` is `bigint` |
 | `mceconomy_logs` | auto-numbered `id` | The ledger; indexed by account |
