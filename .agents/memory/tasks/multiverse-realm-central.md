@@ -63,3 +63,8 @@ chest blocks), a page store keyed by an optional scope, and the shared router.
 realm worlds and pages scoped by `realm_id`. Both prefixes parse JSON up to 8 MB. Tests cover
 the migration, every route family, the stale lock takeover, snapshot saves past 1 MB, and realm
 isolation.
+
+### Task 3 — docs/central-universe
+
+`wiki/information/central-api.md` documents both prefixes, the shared routes, the page routes
+and MCRealm's realm routes; `wiki/information/data-model.md` describes migration `010`.

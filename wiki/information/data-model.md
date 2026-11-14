@@ -500,6 +500,23 @@ Where a plugin parses an integer id, the key is auto-numbered (`serial` on Postg
 
 Migration `009-mcstory-accounts` moved the rows `008` wrote, which were keyed by `player_uuid`, to `player` accounts.
 
+### MCMultiverse and MCRealm
+
+Migration `010`. The tables both plugins use carry a `universe_` prefix because `accounts` above
+is the web account table: `universe_accounts` and `universe_account_property` (page limits,
+default 1) keyed by `account_type` + `account_uuid`; `universe_account_session`, one lock row
+per account naming the game server that holds it; `universe_worlds` (an optional owner account)
+and `universe_world_property` (unique `world_name`, `environment`); `universe_world_chest`, one
+row per chest block, unique on `world_id, x, y, z`, so each half of a double chest is its own
+row. `mcmultiverse_account_inventory` and `mcmultiverse_account_enderchest` key a page by
+account and `page_number`; `mcmultiverse_account_equipment` holds one row per account.
+`mcrealm_realm_types` (unique `system_code`), `mcrealm_realms` (a type and an optional owner),
+`mcrealm_realm_property` (unique `realm_name`) and `mcrealm_realm_world` (a world in exactly one
+realm) describe realms; `mcrealm_account_inventory`, `mcrealm_account_enderchest` and
+`mcrealm_account_equipment` put `realm_id` in front of the account key. Every contents column
+is `longText`: `mediumtext` on MySQL and MariaDB, `text` elsewhere. Account foreign keys are
+composite and cascade, except a world's or realm's owner, which restricts.
+
 ### The central brain
 
 | Table | Key | Notes |
